@@ -1,0 +1,23 @@
+{
+  "name": "wrought",
+  "version": "1.0.0",
+  "description": "Structured engineering methodology with cross-session findings tracking, dual-track pipelines, and multi-agent code review",
+  "author": {
+    "name": "FluxForge AI",
+    "email": "johan@fluxforge.ai"
+  },
+  "homepage": "https://github.com/fluxforgeai/wrought",
+  "repository": "https://github.com/fluxforgeai/wrought-plugin",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "methodology",
+    "findings-tracker",
+    "code-review",
+    "engineering-process",
+    "incident-response",
+    "architecture",
+    "audit-trail",
+    "cross-session"
+  ]
+}
