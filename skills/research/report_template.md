@@ -2,7 +2,7 @@
 
 Write to: `docs/research/{YYYY-MM-DD_HHMM}_{topic}.md`
 
-Example: `docs/research/2026-01-22_1730_iterable_batch_export_expiration.md`
+Example: `docs/research/2026-01-22_1730_stripe_webhook_retry_failure.md`
 
 ```markdown
 # Research: {Topic/Question}

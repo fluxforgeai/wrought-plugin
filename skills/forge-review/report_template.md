@@ -83,4 +83,8 @@ Example: `docs/reviews/2026-03-03_1400_diff.md`
 ### Efficiency Sentinel
 
 {Full structured output from efficiency-sentinel subagent}
+
+### Flow Integrator
+
+{Full structured output from flow-integrator subagent if spawned. If the agent was not spawned for this diff (no navigation surfaces touched), state: "Not spawned — diff did not touch navigation surfaces."}
 ```

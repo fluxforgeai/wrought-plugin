@@ -42,7 +42,7 @@ This is critical — hidden complexity lives in call chains:
 - If function A has a loop O(n) and calls function B which is O(n), the combined complexity is O(n^2)
 - Use Grep to find callers of functions with non-trivial complexity
 - Trace up to 3 levels deep for call chain analysis
-- Document the chain: `A [O(n)] -> B [O(n)] = O(n^2)`
+- Document the chain: `A [O(n)] → B [O(n)] = O(n^2)`
 
 ### 5. Identify Hot Paths
 
@@ -71,7 +71,7 @@ Return your findings as a structured list. Each finding must follow this exact f
 
 Examples:
 ```
-Critical | src/engine/matcher.py:142 | find_matches | O(n^2) | Nested loop over candidates x patterns in per-request handler. Call chain: handle_request -> find_matches -> score_candidate [O(n)] | Pre-sort candidates and use binary search, or build an index
+Critical | src/engine/matcher.py:142 | find_matches | O(n^2) | Nested loop over candidates × patterns in per-request handler. Call chain: handle_request → find_matches → score_candidate [O(n)] | Pre-sort candidates and use binary search, or build an index
 Warning | src/utils/config.py:89 | merge_configs | O(n*m) | Quadratic merge of config dictionaries, but only called at startup with small configs | Consider dict.update() for O(n+m) if configs grow
 ```
 
@@ -83,8 +83,8 @@ If you find no issues at all, return: `No complexity findings.`
 
 After completing your analysis, update your MEMORY.md with:
 - New hot paths discovered (file:function, why it's hot)
-- Complexity baselines for key functions (file:function -> O(x))
-- Acceptable complexity exceptions (file:function -> O(x) is fine because...)
+- Complexity baselines for key functions (file:function → O(x))
+- Acceptable complexity exceptions (file:function → O(x) is fine because...)
 - Remove stale entries for deleted/refactored functions
 
 **Keep MEMORY.md under 200 lines.** Prune oldest entries when approaching the limit.

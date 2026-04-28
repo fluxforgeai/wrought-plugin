@@ -1,7 +1,7 @@
 ---
 name: genesis
 description: "Greenfield project onboarding wizard. Guides through 3-phase structured bootstrapping: Discovery Interview, Business Analysis, Systems Analysis. Produces discovery notes, PRD, and ARCHITECTURE.md. Supports greenfield (interview) and brownfield (codebase analysis) modes with cross-session resumption."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[--brownfield|--demo] <project description>"
 wrought:
   version: "1.0"
@@ -14,7 +14,7 @@ wrought:
       - run_command
   platforms:
     claude-code:
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Project Inception Architect"
     expertise:
@@ -466,7 +466,38 @@ Environment Profiling) will be available in Wrought V1.1.
 
 > Only execute this section if mode is `demo`. Skip all genesis phases (1-3) and Completion.
 
-See [reference.md](reference.md) for the full Demo Mode walkthrough (Steps D1-D3).
+### Step D1: Present Demo Picker
+
+Use AskUserQuestion: "Which demo would you like to try?"
+- "Build a REST API (Proactive pipeline, ~30min) — Build a task management API from scratch using /finding → /design → /blueprint → /implement → /review"
+- "Fix a Production Bug (Reactive pipeline, ~20min) — Find and fix a race condition using /incident → /investigate → /rca-bugfix → /rca-fix → /review"
+- "Audit a Legacy Codebase (Audit pipeline, ~40min) — Audit an Express.js app for security and quality issues using /analyze → /finding → /investigate → /fix → /review"
+
+Map selection to demo file:
+- REST API → `skills/genesis/demos/rest_api.md`
+- Bug Fix → `skills/genesis/demos/bug_fix.md`
+- Audit → `skills/genesis/demos/audit.md`
+
+### Step D2: Scaffold Demo Project
+
+1. Read the selected demo file
+2. Create project directory: `demo-rest-api/`, `demo-bug-fix/`, or `demo-audit/`
+3. For each `<!-- file: {path} -->` marker in the demo file, extract the immediately following code block and write it to `{project_dir}/{path}`
+4. Extract the content between `<!-- walkthrough -->` and `<!-- /walkthrough -->` markers and write it to `{project_dir}/DEMO_WALKTHROUGH.md`
+
+### Step D3: Print Summary
+
+Print the scaffolded file tree, then:
+
+```
+Demo scaffolded! Open DEMO_WALKTHROUGH.md to get started:
+
+  Read {project_dir}/DEMO_WALKTHROUGH.md
+
+The walkthrough will guide you through the {pipeline_type} pipeline step by step.
+```
+
+**STOP.** Do NOT proceed beyond this point. Do NOT run pipeline commands. Let the user follow the walkthrough at their own pace.
 
 ---
 

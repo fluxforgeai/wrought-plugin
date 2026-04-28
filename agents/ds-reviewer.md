@@ -42,14 +42,14 @@ For each data structure, determine how it's actually used:
 
 | Current | Access Pattern | Recommended | Why |
 |---------|---------------|-------------|-----|
-| `list` | Frequent membership tests | `set` | O(n) -> O(1) lookup |
-| `list` | FIFO queue (pop(0)) | `collections.deque` | O(n) -> O(1) popleft |
+| `list` | Frequent membership tests | `set` | O(n) → O(1) lookup |
+| `list` | FIFO queue (pop(0)) | `collections.deque` | O(n) → O(1) popleft |
 | `list` | Frequent sorted insertions | `bisect.insort` or `sortedcontainers.SortedList` | Maintain sort order efficiently |
 | `dict` | Only iteration, no lookups | `list` of tuples or `namedtuple` | Simpler, less memory |
 | `dict` | Counting occurrences | `collections.Counter` | Purpose-built, cleaner API |
 | `dict` | Group-by operations | `collections.defaultdict(list)` | Cleaner than setdefault pattern |
 | Manual sort + index | Binary search on sorted data | `bisect` module | Purpose-built, correct edge cases |
-| Linear search | Large sorted collection | `bisect.bisect_left` | O(n) -> O(log n) |
+| Linear search | Large sorted collection | `bisect.bisect_left` | O(n) → O(log n) |
 | Nested dicts | Structured data with known fields | `dataclass` or `TypedDict` | Type safety, readability |
 
 ### 4. Check Algorithm Choice
@@ -98,7 +98,7 @@ If you find no issues at all, return: `No data structure findings.`
 
 After completing your analysis, update your MEMORY.md with:
 - Domain data shapes (what kind of data this project stores and processes)
-- Known collection sizes (file:variable -> approximate size)
+- Known collection sizes (file:variable → approximate size)
 - Common access patterns (e.g., "artifacts list is iterated, never searched")
 - Remove stale entries for deleted/refactored code
 

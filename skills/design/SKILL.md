@@ -1,7 +1,7 @@
 ---
 name: design
 description: "Interactive design analysis for architecture decisions. Combines codebase analysis, documentation review, and external research to provide evidence-based recommendations. Use for tradeoff analysis, pattern evaluation, migration planning, or design validation."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[mode] [topic]"
 allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write
 wrought:
@@ -17,7 +17,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, WebFetch, WebSearch, Write"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Design Analyst"
     expertise:
@@ -122,7 +122,7 @@ Before executing this skill, verify ALL of the following:
 
 ## Research Framework
 
-See [research_framework.md](research_framework.md) for the 4-layer research process (Codebase -> Documentation -> External -> Impact).
+See [research_framework.md](research_framework.md) for the 4-layer research process (Codebase → Documentation → External → Impact).
 
 ---
 
@@ -133,13 +133,13 @@ The most common mode — comparing approaches for a design decision.
 ### Workflow
 
 1. **CP1 — Understand Goal**: "What's the design goal for: {topic}?"
-   -> Improve reliability | Improve performance | Reduce complexity | Add new capability | Let me describe...
+   → Improve reliability | Improve performance | Reduce complexity | Add new capability | Let me describe...
 
 2. **CP2 — Constraints** [multi]: "What constraints should I consider?"
-   -> Must maintain backward compat | Cannot change external APIs | Limited time/resources | Must work with existing infra | No constraints | Let me specify...
+   → Must maintain backward compat | Cannot change external APIs | Limited time/resources | Must work with existing infra | No constraints | Let me specify...
 
 3. **CP3 — Priorities**: "What matters most for this decision?"
-   -> Reliability > Performance > Simplicity > Cost > Time* | Performance > Reliability > Time > Simplicity > Cost | Simplicity > Time > Reliability > Performance > Cost | Time > Simplicity > Reliability > Performance > Cost | Let me specify...
+   → Reliability > Performance > Simplicity > Cost > Time* | Performance > Reliability > Time > Simplicity > Cost | Simplicity > Time > Reliability > Performance > Cost | Time > Simplicity > Reliability > Performance > Cost | Let me specify...
 
 **PHASE 1: Codebase Research** (Automatic)
 - Read target component source, analyze dependencies, find related patterns, review related incidents/RCAs
@@ -150,7 +150,7 @@ The most common mode — comparing approaches for a design decision.
    Pattern used: {identified pattern}
    Known issues: {from RCAs}
    Is this accurate?"
-   -> Yes, correct | Mostly correct, minor clarification | Missing important context | Not quite right
+   → Yes, correct | Mostly correct, minor clarification | Missing important context | Not quite right
 
 **PHASE 2: External Research** (Automatic)
 - WebSearch: "{topic} best practices 2026", "{library} {pattern} 2026", "{problem} solutions comparison 2026"
@@ -161,7 +161,7 @@ The most common mode — comparing approaches for a design decision.
    2. {source 2} — {what it covers}
    3. {source 3} — {what it covers}
    Any other sources I should check?"
-   -> These look good, proceed | Also check {specific source} | Focus more on {aspect} | Skip external research
+   → These look good, proceed | Also check {specific source} | Focus more on {aspect} | Skip external research
 
 **PHASE 3: Identify Options** (Automatic)
 - Based on research, identify 3-5 viable approaches (always include current approach as baseline)
@@ -172,7 +172,7 @@ The most common mode — comparing approaches for a design decision.
    3. {Option C}: {brief description}
    4. Current approach (baseline)
    Should I evaluate all of these?"
-   -> Yes, evaluate all | Remove an option | Add another option | Just compare specific options
+   → Yes, evaluate all | Remove an option | Add another option | Just compare specific options
 
 **PHASE 4: Deep Analysis** (Automatic)
 - For each option: how it works, implementation approach, pros/cons, impact assessment, effort estimate, risk level
@@ -184,22 +184,22 @@ The most common mode — comparing approaches for a design decision.
    Breaking changes: {yes/no}
    Estimated effort: {X hours/days}
    Does this match your expectations?"
-   -> Yes, reasonable | Effort underestimated | Effort overestimated | Missing affected areas | Let me provide context
+   → Yes, reasonable | Effort underestimated | Effort overestimated | Missing affected areas | Let me provide context
 
 **PHASE 5: Scoring & Comparison** (Automatic)
 - Score each option against user's priorities, calculate weighted totals, generate trade-off matrix
 
 8. **CP8 — Review Recommendation**: "Based on your priorities, I recommend: {Option}
-   Summary: {Primary benefit} {Secondary benefit} {Main trade-off}
+   Summary: ✓ {Primary benefit} ✓ {Secondary benefit} ✗ {Main trade-off}
    Key trade-off: {what you gain} vs {what you lose}
    Do you want to proceed with this recommendation?"
-   -> Yes, create the design document | I prefer a different option | Need more analysis on specific aspect | Just save the analysis
+   → Yes, create the design document | I prefer a different option | Need more analysis on specific aspect | Just save the analysis
 
 **PHASE 6: Generate Report** (Automatic)
 Write to: `docs/design/{YYYY-MM-DD_HHMM}_{topic_slug}.md`
 
 9. **CP9 — Next Steps**: "Design analysis complete: {filename}. What would you like to do next?"
-   -> Create implementation plan (EnterPlanMode) | Start implementing now | Share with team first | Save for later
+   → Create implementation plan (EnterPlanMode) | Start implementing now | Share with team first | Save for later
 
 **STOP** and await user decision.
 
@@ -212,7 +212,7 @@ Explain a design pattern and assess its applicability.
 ### Workflow
 
 1. **CP1 — Context**: "What's the context for exploring the {pattern} pattern?"
-   -> Considering adoption | Debugging existing implementation | Comparing with alternatives | Educational
+   → Considering adoption | Debugging existing implementation | Comparing with alternatives | Educational
 
 **PHASE 1: Research** (Automatic)
 - WebSearch: "{pattern} implementation 2026", "{pattern} pros cons 2026", "{pattern} {language} example 2026"
@@ -223,7 +223,7 @@ Explain a design pattern and assess its applicability.
    2. {Variation B}: {brief description}
    3. {Variation C}: {brief description}
    Which interests you most?"
-   -> {Variation A} | {Variation B} | Compare all variations | General overview
+   → {Variation A} | {Variation B} | Compare all variations | General overview
 
 **PHASE 2: Analysis** (Automatic)
 - Pattern explanation (what, why, when), applicability to codebase, where it could be applied, pros/cons
@@ -234,7 +234,7 @@ Explain a design pattern and assess its applicability.
    And would NOT fit well in:
    - {Location 3}: {why not}
    Does this match your intuition?"
-   -> Yes, helpful | Surprised about {location} | What about {other location}? | Different use case
+   → Yes, helpful | Surprised about {location} | What about {other location}? | Different use case
 
 **PHASE 3: Generate Report** (Automatic)
 Write to: `docs/design/{YYYY-MM-DD_HHMM}_pattern_{name}.md`
@@ -250,13 +250,13 @@ Plan migration from one approach to another.
 ### Workflow
 
 1. **CP1 — Migration Reason**: "Why are you migrating from {from} to {to}?"
-   -> Performance issues | Maintainability concerns | Deprecation | New requirements can't meet | Let me explain...
+   → Performance issues | Maintainability concerns | Deprecation | New requirements can't meet | Let me explain...
 
 2. **CP2 — Constraints** [multi]: "What constraints affect this migration?"
-   -> Must maintain backward compat | Cannot have downtime | Must be reversible | Limited time window | No constraints | Let me specify...
+   → Must maintain backward compat | Cannot have downtime | Must be reversible | Limited time window | No constraints | Let me specify...
 
 3. **CP3 — Migration Strategy**: "What migration strategy do you prefer?"
-   -> Big bang (all at once) | Strangler fig (gradual) | Parallel run (both systems) | Let me understand options first
+   → Big bang (all at once) | Strangler fig (gradual) | Parallel run (both systems) | Let me understand options first
 
 **PHASE 1: Current State Analysis** (Automatic)
 - Deep dive into current implementation, map all usages and dependencies, identify migration complexity
@@ -268,7 +268,7 @@ Plan migration from one approach to another.
    Current ({from}): {N} files, {N} call sites, key complexity: {desc}
    Target ({to}): {approach description}, key benefit: {desc}
    Is this accurate?"
-   -> Yes, proceed | Current scope is different | Target needs correction | Add more context
+   → Yes, proceed | Current scope is different | Target needs correction | Add more context
 
 **PHASE 3: Migration Plan** (Automatic)
 - Step-by-step plan, risk assessment, rollback points, testing strategy, timeline estimate
@@ -277,7 +277,7 @@ Plan migration from one approach to another.
    Phase 1: {desc} ({effort}), Phase 2: {desc} ({effort}), Phase 3: {desc} ({effort})
    Total effort: {estimate}, Risk level: {assessment}
    Does this look feasible?"
-   -> Yes, create detailed plan | Timeline too aggressive | Missing a phase | Risk too high
+   → Yes, create detailed plan | Timeline too aggressive | Missing a phase | Risk too high
 
 **PHASE 4: Generate Report** (Automatic)
 Write to: `docs/design/{YYYY-MM-DD_HHMM}_migrate_{from}_to_{to}.md`
@@ -293,10 +293,10 @@ Review a proposed design before implementation.
 ### Workflow
 
 1. **CP1 — Receive Proposal**: "How should I receive the design proposal?"
-   -> Read from file (provide path) | I'll paste it here | Described in conversation above | Reference a PR or issue
+   → Read from file (provide path) | I'll paste it here | Described in conversation above | Reference a PR or issue
 
 2. **CP2 — Review Focus** [multi]: "What aspects should I focus on?"
-   -> Completeness | Feasibility | Risk assessment | Alignment with architecture | All of the above*
+   → Completeness | Feasibility | Risk assessment | Alignment with architecture | All of the above*
 
 **PHASE 1: Proposal Analysis** (Automatic)
 - Parse proposal, compare to codebase reality, identify gaps/conflicts, research alternatives for weak points
@@ -305,16 +305,16 @@ Review a proposed design before implementation.
    1. {Ambiguity 1}
    2. {Ambiguity 2}
    Can you clarify?"
-   -> Let me explain... | Skip — not critical | Proposal should cover this
+   → Let me explain... | Skip — not critical | Proposal should cover this
 
 **PHASE 2: Validation** (Automatic)
 - Assess each aspect, score the proposal, identify improvements
 
 4. **CP4 — Review Findings**: "Validation summary:
-   {Strength 1} {Strength 2} {Concern 1} {Gap 1}
+   ✓ {Strength 1} ✓ {Strength 2} ⚠ {Concern 1} ✗ {Gap 1}
    Overall: {Ready to implement | Needs revision | Major concerns}
    How should I proceed?"
-   -> Create detailed review document | Focus on addressing concerns | Looks good — summarize | Compare with alternative
+   → Create detailed review document | Focus on addressing concerns | Looks good — summarize | Compare with alternative
 
 **PHASE 3: Generate Report** (Automatic)
 Write to: `docs/design/{YYYY-MM-DD_HHMM}_review_{proposal_name}.md`
@@ -330,10 +330,10 @@ Assess impact of a specific change before making it.
 ### Workflow
 
 1. **CP1 — Describe Change**: "Describe the change you're considering:"
-   -> Point to specific code/file | Describe in natural language | Reference a ticket/issue | In the conversation above
+   → Point to specific code/file | Describe in natural language | Reference a ticket/issue | In the conversation above
 
 2. **CP2 — Change Scope**: "What type of change is this?"
-   -> Interface change (signatures, contracts) | Implementation change (internal only) | Dependency change (add/remove/update) | Configuration change | Let me describe...
+   → Interface change (signatures, contracts) | Implementation change (internal only) | Dependency change (add/remove/update) | Configuration change | Let me describe...
 
 **PHASE 1: Impact Discovery** (Automatic)
 - Find all usages of affected code (Grep), map dependencies, identify affected tests, check configurations
@@ -343,7 +343,7 @@ Assess impact of a specific change before making it.
    Tests: {test file 1}, {test file 2}
    Config: {config if any}
    Anything I'm missing?"
-   -> No, this covers it | Also affects {area} | {File} isn't affected | Need to check {area}
+   → No, this covers it | Also affects {area} | {File} isn't affected | Need to check {area}
 
 **PHASE 2: Risk Assessment** (Automatic)
 - Full impact assessment using framework, risk scoring, mitigation suggestions
@@ -352,7 +352,7 @@ Assess impact of a specific change before making it.
    Effort: {estimate}, Risk: {Low/Medium/High}, Breaking changes: {yes/no}
    Top risk: {description}, Mitigation: {suggestion}
    Does this help with your decision?"
-   -> Yes, proceed with change | Yes, but mitigate risks first | Risk too high — reconsider | Need more detail on {aspect}
+   → Yes, proceed with change | Yes, but mitigate risks first | Risk too high — reconsider | Need more detail on {aspect}
 
 **PHASE 3: Generate Report** (Automatic)
 Write to: `docs/design/{YYYY-MM-DD_HHMM}_impact_{change_slug}.md`
@@ -380,49 +380,10 @@ See [report_template.md](report_template.md) for the full design analysis report
 
 ## Findings Tracker Update Protocol
 
-## At the START of work
-
-Check if this work relates to a tracked finding:
-
-1. If input contains `F{N}` (e.g., "F1", "F3"), search `docs/findings/*_FINDINGS_TRACKER.md` for that finding
-2. If input is topic-based, search active trackers for a matching finding title
-3. If a match is found:
-   a. Read the tracker and any linked artifacts (finding report, investigation, design analysis)
-   b. Use these as context for the current work
-
-## At the END of work
-
-After writing the output artifact(s):
-
-1. Update the tracker's overview table: set `Stage` to `Designing`, set `Status` to `In Progress`
-2. Update the per-finding **Lifecycle** table — append row:
-   ```
-   | Designing | {YYYY-MM-DD HH:MM} UTC | {session} | [Design analysis]({report_path}) |
-   ```
-3. Check the resolution task: `[x] **FN.1: Design approach**...`
-4. Add changelog entry:
-   ```
-   | {YYYY-MM-DD HH:MM} UTC | {session} | FN stage -> Designing. Design analysis: {report_path} |
-   ```
-5. Update `Last Updated` timestamp at top of tracker
-6. Sync to GitHub Projects (NON-FATAL) — read `docs/reference/github_projects_sync_protocol.md`, follow Protocol B: Lifecycle Stage = Designing (`32f197e1`), Status = In Progress (`47fc9ee4`), Evidence = artifact path(s). If `**Project Item ID**:` is missing or `—`, skip sync with a note.
-
-## HANDOFF UPDATE
-
-After the standard handoff message to the user, add:
-
-```
-Tracker updated: {tracker_path} — FN stage -> Designing
-
-After /plan completes, update the tracker:
-- Stage -> Planned
-- Lifecycle row: `| Planned | {timestamp} | {session} | [Plan]({plan_path}) |`
-- Check task: `[x] **FN.3**: Implementation plan...`
-- Changelog: `FN stage -> Planned. Plan: {plan_path}`
-- GitHub sync (NON-FATAL): Protocol B — Lifecycle Stage = Planned (`a66cfac9`), Status = In Progress (`47fc9ee4`)
-```
-
-If no matching finding exists, proceed normally — not all work originates from findings.
+See [tracker_update_checklist.md](../_shared/tracker_update_checklist.md)
+- Stage: "Designing"
+- Task: FN.1 (Design approach)
+- GitHub field: `32f197e1`
 
 ---
 
@@ -447,7 +408,7 @@ Risk level: {if applicable}
 
 **CRITICAL PIPELINE RULE**: Suggest ONLY the next pipeline step below. Do NOT offer to implement. Do NOT offer to skip `/blueprint`. Do NOT offer alternatives to the pipeline sequence.
 
-Next step: Run `/blueprint` with the design at `docs/design/{filename}.md` to create an implementation spec and prompt.
+Next step: If this project has frontend files (check Glob for `package.json`, `*.tsx`, `*.vue`, `*.svelte`), recommend running `/ux-design` first to generate a Design Brief that will inform the blueprint. Otherwise, run `/blueprint` with the design at `docs/design/{filename}.md` to create an implementation spec and prompt.
 
 **STOP** — do NOT proceed with implementation. Do NOT add commentary suggesting any pipeline step could be skipped or is unnecessary. Await user instructions.
 
@@ -473,17 +434,17 @@ Use EnterPlanMode to create detailed implementation plan
 
 ```
 /design tradeoff "retry strategy for API calls"
--> Full interactive comparison of retry approaches
+→ Full interactive comparison of retry approaches
 
 /design pattern "circuit breaker"
--> Pattern explanation + applicability assessment
+→ Pattern explanation + applicability assessment
 
 /design migrate "scattered retries" "centralized middleware"
--> Migration plan with phases and rollback points
+→ Migration plan with phases and rollback points
 
 /design validate "the proposed caching layer"
--> Review of design proposal with gaps identified
+→ Review of design proposal with gaps identified
 
 /design impact "changing batch_client timeout from 30s to 60s"
--> Impact assessment of specific change
+→ Impact assessment of specific change
 ```

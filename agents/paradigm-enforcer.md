@@ -119,8 +119,8 @@ If you find no issues at all, return: `No paradigm findings.`
 ## After Analysis — Update Memory
 
 After completing your analysis, update your MEMORY.md with:
-- Per-module paradigm assignments (file/directory -> FP, OOP, or Mixed)
-- Intentional mixing points (file -> "mixed by design because...")
+- Per-module paradigm assignments (file/directory → FP, OOP, or Mixed)
+- Intentional mixing points (file → "mixed by design because...")
 - Team conventions discovered (e.g., "CLI layer is OOP, core engine is FP")
 - Remove stale entries for deleted/refactored files
 

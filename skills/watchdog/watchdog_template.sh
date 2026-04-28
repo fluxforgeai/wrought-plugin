@@ -39,23 +39,107 @@ SYSTEM_COUNT=0
 FIX_COUNT=0
 CHECK_COUNT=0
 START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+START_EPOCH=$(date +%s)
 
-# Get Telegram credentials from backend container (customize container name)
-TELEGRAM_BOT_TOKEN=$(docker exec ${CONTAINER_NAME} printenv TELEGRAM_BOT_TOKEN 2>/dev/null || echo "")
-TELEGRAM_CHAT_ID=$(docker exec ${CONTAINER_NAME} printenv TELEGRAM_CHAT_ID 2>/dev/null || echo "")
+# ========================================
+# CONFIGURATION SOURCING (Stage 1 — pluggable dispatchers)
+# ========================================
+# Load backend credentials and config from layered sources:
+#   Tier 1: host environment          (already exported — highest priority)
+#   Tier 2: ./.env.watchdog then ../.env.watchdog
+#   Tier 3: ./.env then ../.env
+#   Tier 4: docker exec $CONTAINER_NAME printenv VAR  (legacy fallback)
+
+_load_env_file() {
+    local file="$1" vars="$2" var value
+    [ -f "$file" ] || return 0
+    for var in $vars; do
+        if [ -z "${!var:-}" ]; then
+            value=$(grep -E "^[[:space:]]*(export[[:space:]]+)?${var}=" "$file" 2>/dev/null | head -1 | sed -E "s/^[[:space:]]*(export[[:space:]]+)?${var}=[\"']?([^\"']*)[\"']?[[:space:]]*\$/\2/")
+            if [ -n "$value" ]; then
+                export "$var=$value"
+            fi
+        fi
+    done
+}
+
+source_watchdog_env() {
+    local vars="TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID NTFY_TOPIC NTFY_SERVER SLACK_WEBHOOK_URL WEBHOOK_URL WEBHOOK_HEADERS EMAIL_TO EMAIL_FROM CONTAINER_NAME WATCHDOG_BACKENDS WATCHDOG_MONITOR_CMD WATCHDOG_DISPATCH_TIMEOUT WATCHDOG_DISPATCHER_DIR"
+    _load_env_file "./.env.watchdog" "$vars"
+    _load_env_file "../.env.watchdog" "$vars"
+    _load_env_file "./.env" "$vars"
+    _load_env_file "../.env" "$vars"
+    if [ -n "${CONTAINER_NAME:-}" ] && command -v docker >/dev/null 2>&1; then
+        local var value
+        for var in $vars; do
+            if [ -z "${!var:-}" ]; then
+                value=$(docker exec "${CONTAINER_NAME}" printenv "$var" 2>/dev/null || true)
+                if [ -n "$value" ]; then
+                    export "$var=$value"
+                fi
+            fi
+        done
+    fi
+}
+
+source_watchdog_env
+
+# Monitor source command — Stage 1 generalization of the docker-logs-only original.
+# Default preserves backward compat for Docker+Telegram legacy users. Override by
+# setting WATCHDOG_MONITOR_CMD to any shell command that produces log text on stdout,
+# e.g. WATCHDOG_MONITOR_CMD="uv run pytest tests/ --tb=no -q 2>&1 | tail -30"
+WATCHDOG_MONITOR_CMD="${WATCHDOG_MONITOR_CMD:-docker logs ${CONTAINER_NAME:-} --since ${INTERVAL}s}"
+
+# Decision #15: backward-compat default resolution for WATCHDOG_BACKENDS.
+# Legacy Docker+Telegram users had CONTAINER_NAME set and no WATCHDOG_BACKENDS —
+# for them we default to "telegram" to preserve pre-Stage-1 behavior byte-exact.
+# Zero-config users (no Docker) get "local-file,ntfy" so watchdog works out of
+# the box without any credentials.
+if [ -z "${WATCHDOG_BACKENDS:-}" ]; then
+    if [ -n "${CONTAINER_NAME:-}" ]; then
+        WATCHDOG_BACKENDS="telegram"
+    else
+        WATCHDOG_BACKENDS="local-file,ntfy"
+    fi
+fi
+
+# Dispatcher directory — sibling of this script by default. Set WATCHDOG_DISPATCHER_DIR
+# in the environment (or via .env.watchdog) to override, e.g. when the deployed
+# template is copied elsewhere without its dispatchers alongside.
+WATCHDOG_DISPATCHER_DIR="${WATCHDOG_DISPATCHER_DIR:-$(dirname "${BASH_SOURCE[0]}")/dispatchers}"
+
+# Parse WATCHDOG_BACKENDS into a global array once. The IFS prefix-assignment
+# is scoped to the `read` builtin — no leakage into the outer shell's IFS.
+IFS=',' read -ra _WATCHDOG_BACKENDS <<< "$WATCHDOG_BACKENDS"
 
 # ========================================
 # FUNCTIONS
 # ========================================
 
-send_telegram() {
-    local msg="$1"
-    if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "text=${msg}" \
-            -d "parse_mode=HTML" > /dev/null 2>&1
-    fi
+send_alert() {
+    # Fan out an alert to all configured backends. Dispatcher contract:
+    #   dispatcher.sh {category} {message} {severity}
+    # Env passed through: SESSION_ID, WATCHDOG_DISPATCH_TIMEOUT, plus whatever
+    # the dispatcher itself reads (TELEGRAM_BOT_TOKEN, NTFY_TOPIC, etc.).
+    local category="$1"
+    local message="$2"
+    local severity="$3"
+    local backend dispatcher_path exit_code
+    for backend in "${_WATCHDOG_BACKENDS[@]}"; do
+        backend="${backend// /}"  # trim whitespace
+        [ -z "$backend" ] && continue
+        dispatcher_path="${WATCHDOG_DISPATCHER_DIR}/${backend}.sh"
+        if [ ! -x "$dispatcher_path" ]; then
+            echo "[watchdog] WARN: dispatcher '$backend' not found or not executable at $dispatcher_path" >> "$LOG_FILE"
+            continue
+        fi
+        exit_code=0
+        SESSION_ID="$SESSION_ID" \
+        WATCHDOG_DISPATCH_TIMEOUT="${WATCHDOG_DISPATCH_TIMEOUT:-10}" \
+            "$dispatcher_path" "$category" "$message" "$severity" \
+            >> "$LOG_FILE" 2>&1 || exit_code=$?
+        echo "[watchdog] dispatcher $backend exit=$exit_code" >> "$LOG_FILE"
+    done
 }
 
 # JSON-escape stdin (prefer jq for speed; fall back to python3)
@@ -116,7 +200,7 @@ INCIDENTEOF
     # Different Telegram alerts based on category
     if [ "$category" = "fix-related" ]; then
         # Fix-related: Red alert with target emoji
-        send_telegram "🎯🔴 <b>WATCHDOG: Fix-Related Error!</b>
+        send_alert "fix-related" "🎯🔴 <b>WATCHDOG: Fix-Related Error!</b>
 
 <b>Category:</b> FIX-RELATED
 <b>Type:</b> $error_type
@@ -126,11 +210,11 @@ INCIDENTEOF
 ⚠️ <i>This error is related to the fix being monitored!</i>
 <b>Fix context:</b> $FIX_DESCRIPTION
 
-Run in Claude: <code>/incident $summary</code>"
+Run in Claude: <code>/incident $summary</code>" "high"
         ((FIX_COUNT++))
     else
         # System: Yellow warning
-        send_telegram "⚠️ <b>WATCHDOG: System Error</b>
+        send_alert "system" "⚠️ <b>WATCHDOG: System Error</b>
 
 <b>Category:</b> SYSTEM
 <b>Type:</b> $error_type
@@ -139,7 +223,7 @@ Run in Claude: <code>/incident $summary</code>"
 
 <i>General system error (not related to current fix)</i>
 
-Run in Claude: <code>/incident $summary</code>"
+Run in Claude: <code>/incident $summary</code>" "medium"
         ((SYSTEM_COUNT++))
     fi
 }
@@ -147,7 +231,7 @@ Run in Claude: <code>/incident $summary</code>"
 # Write status file for Claude to read
 write_status() {
     local timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-    local uptime_seconds=$(($(date +%s) - $(date -d "$START_TIME" +%s 2>/dev/null || echo "0")))
+    local uptime_seconds=$(($(date +%s) - START_EPOCH))
 
     cat > "$STATUS_FILE" << STATUSEOF
 {
@@ -188,7 +272,7 @@ echo "========================================" >> "$LOG_FILE"
 # Write initial status
 write_status
 
-send_telegram "🐕 <b>Watchdog Started</b>
+send_alert "info" "🐕 <b>Watchdog Started</b>
 
 <b>Session:</b> ${SESSION_ID}
 <b>Mode:</b> Passive monitoring
@@ -198,7 +282,7 @@ send_telegram "🐕 <b>Watchdog Started</b>
 <b>Watching for:</b>
 $FIX_DESCRIPTION
 
-Status file: <code>/tmp/watchdog_${SESSION_ID}_status.json</code>"
+Status file: <code>/tmp/watchdog_${SESSION_ID}_status.json</code>" "info"
 
 while true; do
     TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
@@ -207,8 +291,8 @@ while true; do
     echo "" >> "$LOG_FILE"
     echo "--- Check #$CHECK_COUNT: $TIMESTAMP ---" >> "$LOG_FILE"
 
-    # Fetch recent logs from backend container (customize container name)
-    LOGS=$(docker logs ${CONTAINER_NAME} --since "${INTERVAL}s" 2>&1)
+    # Fetch recent logs from the configured monitor source (default: docker logs $CONTAINER_NAME)
+    LOGS=$(eval "$WATCHDOG_MONITOR_CMD" 2>&1)
 
     # Check for errors (case insensitive, all patterns)
     ALL_PATTERNS="$SYSTEM_PATTERNS"

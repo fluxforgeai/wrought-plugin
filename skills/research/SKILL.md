@@ -3,7 +3,7 @@ name: research
 description: "Research a technical topic and document findings. Use when you need to research a technical topic, error, or concept and create a documented record."
 context: fork
 agent: general-purpose
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[topic or question]"
 allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write
 wrought:
@@ -19,7 +19,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, WebFetch, WebSearch, Write"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Technical Researcher"
     expertise:
@@ -71,7 +71,7 @@ wrought:
 
 **Examples**:
 
-- `/research Why does Iterable batch export return 400 after job expires?`
+- `/research Why does Stripe batch export return 400 after job expires?`
 - `/research What are httpx timeout best practices for long-running downloads?`
 - `/research How does GCS resumable upload handle network interruptions?`
 - `/research [pasted error message or documentation]`
@@ -115,8 +115,8 @@ Parse the user's question or pasted text to identify:
 
 **EXAMPLES** (use as patterns, search for whatever is relevant):
 
-- If about **Iterable**: Search "Iterable API {topic} {current_month_year}"
-- If about **Intercom**: Search "Intercom API {topic} {current_month_year}"
+- If about **Stripe**: Search "Stripe API {topic} {current_month_year}"
+- If about **Slack**: Search "Slack API {topic} {current_month_year}"
 - If about **GCS**: Search "Google Cloud Storage {topic} {current_month_year}"
 - If about **httpx**: Search "Python httpx {topic} {current_month_year}"
 - If about **FastAPI**: Search "FastAPI {topic} {current_month_year}"

@@ -1,7 +1,7 @@
 ---
 name: forge-review
 description: "Deep multi-agent code review with algorithmic complexity analysis, data structure review, paradigm enforcement, and efficiency analysis. Complements /simplify with deeper dimensions."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[--scope=diff|full] [file or directory]"
 allowed-tools: Read, Grep, Glob, Bash, Agent, Write
 wrought:
@@ -17,7 +17,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, Bash, Agent, Write"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Code Review Orchestrator"
     expertise:
@@ -69,10 +69,13 @@ wrought:
 You are the Code Review Orchestrator. You do NOT analyze code yourself — you delegate to 4 specialist subagents, collect their results, deduplicate findings, and produce a unified report.
 
 Your subagents:
-1. **Complexity Analyst** (complexity-analyst plugin agent) — Big O time/space, hot paths, call chains
-2. **DS&A Reviewer** (ds-reviewer plugin agent) — Data structure selection vs access patterns
-3. **Paradigm Enforcer** (paradigm-enforcer plugin agent) — FP/OOP consistency, auto-detection
-4. **Efficiency Sentinel** (efficiency-sentinel plugin agent) — Performance anti-patterns, N+1, memory, concurrency
+1. **Complexity Analyst** (`.claude/agents/complexity-analyst.md`) — Big O time/space, hot paths, call chains
+2. **DS&A Reviewer** (`.claude/agents/ds-reviewer.md`) — Data structure selection vs access patterns
+3. **Paradigm Enforcer** (`.claude/agents/paradigm-enforcer.md`) — FP/OOP consistency, auto-detection
+4. **Efficiency Sentinel** (`.claude/agents/efficiency-sentinel.md`) — Performance anti-patterns, N+1, memory, concurrency
+5. **Flow Integrator** (`.claude/agents/flow-integrator.md`) — End-to-end navigation-flow correctness (conditional spawn: only runs when diff touches navigation surfaces)
+
+Note: Flow Integrator spawns conditionally. On non-frontend / non-navigation diffs, only the first 4 agents run.
 
 ---
 
@@ -171,9 +174,38 @@ No reviewable files found for scope '{scope}'.
 
 ---
 
-## Step 4: Spawn 4 Subagents in Parallel
+## Step 4: Spawn Subagents in Parallel (4 or 5 agents depending on diff)
 
-**CRITICAL**: All 4 subagents MUST be launched in a SINGLE message using the Agent tool. This ensures true parallel execution.
+### 4a. Detect Navigation-Surface Trigger
+
+Before spawning, check if the diff touches navigation surfaces. Spawn `flow-integrator` as a 5th agent if **ANY** of the following match:
+
+**File-path regex** (check each changed file path):
+- `routes/` or `pages/` or `app/` as a directory segment
+- `[^/]+Layout\.[jt]sx?` (layout files)
+- `[^/]+Router\.[jt]sx?` (router files)
+- `_app\.[jt]sx?` (Next.js _app)
+- `middleware\.[jt]sx?`
+- `[^/]+\.route\.[jt]sx?`
+
+**Extension filter** (check for any changed file with):
+- `.tsx`, `.jsx`, `.vue`, `.svelte`, `.html`
+
+**Content regex** (run `git diff --unified=0` on changed files; check added/modified lines for):
+- `<Route\b`, `<Link\b`, `<NavLink\b`, `<Navigate\b`
+- `\brouter\.(push|replace|navigate)\b`, `\bhistory\.push\b`
+- `\bredirect\(`, `\bnavigate\(`
+- `\bhref=["']`, `\bto=["']`
+- `\buseRouter\(`, `\buseNavigate\(`, `\buseHistory\(`
+- `\bcreateBrowserRouter\(`, `\bcreateRoutesFromElements\(`
+
+If ANY category matches → set `SPAWN_FLOW_INTEGRATOR = true` and `AGENT_COUNT = 5`. Otherwise → `SPAWN_FLOW_INTEGRATOR = false` and `AGENT_COUNT = 4`.
+
+The reference implementation of this heuristic is `src/wrought/core/flow_trigger.py::should_spawn_flow_integrator()` — tested by `tests/claude/test_flow_integrator_trigger.py`.
+
+### 4b. Launch Agents in Parallel
+
+**CRITICAL**: All agents MUST be launched in a SINGLE message using the Agent tool. This ensures true parallel execution.
 
 For each subagent, use:
 - `subagent_type: "general-purpose"`
@@ -184,7 +216,7 @@ The prompt for each subagent should follow this template:
 ```
 You are the {agent_name} subagent for /forge-review.
 
-Your system prompt is defined in the {agent_filename} plugin agent — read it first and follow all instructions.
+Your system prompt is defined in `.claude/agents/{agent_filename}.md` — read it first and follow all instructions.
 
 ## Review Scope
 
@@ -194,7 +226,7 @@ Your system prompt is defined in the {agent_filename} plugin agent — read it f
 
 ## Instructions
 
-1. Read your system prompt from the plugin agent definition
+1. Read your system prompt at `.claude/agents/{agent_filename}.md`
 2. Read your MEMORY.md for prior context about this codebase
 3. Analyze each file in the list above according to your system prompt
 4. Return your findings in the structured format specified in your system prompt
@@ -203,24 +235,26 @@ Your system prompt is defined in the {agent_filename} plugin agent — read it f
 Return ONLY your structured findings. Do not include explanatory prose.
 ```
 
-Launch all 4 in parallel:
-- **Agent 1**: Complexity Analyst → complexity-analyst (plugin agent)
-- **Agent 2**: DS&A Reviewer → ds-reviewer (plugin agent)
-- **Agent 3**: Paradigm Enforcer → paradigm-enforcer (plugin agent)
-- **Agent 4**: Efficiency Sentinel → efficiency-sentinel (plugin agent)
+Launch agents in parallel (4 always, plus Agent 5 if `SPAWN_FLOW_INTEGRATOR` is true):
+- **Agent 1**: Complexity Analyst → `.claude/agents/complexity-analyst.md`
+- **Agent 2**: DS&A Reviewer → `.claude/agents/ds-reviewer.md`
+- **Agent 3**: Paradigm Enforcer → `.claude/agents/paradigm-enforcer.md`
+- **Agent 4**: Efficiency Sentinel → `.claude/agents/efficiency-sentinel.md`
+- **Agent 5** (conditional on `SPAWN_FLOW_INTEGRATOR`): Flow Integrator → `.claude/agents/flow-integrator.md`
 
 ---
 
 ## Step 5: Collect Results
 
-Wait for all 4 subagents to complete. Each will return structured findings in their specified format:
+Wait for all agents to complete (4 or 5 depending on `AGENT_COUNT`). Each will return structured findings in their specified format:
 
 - Complexity Analyst: `{severity} | {file}:{line} | {function} | {complexity} | {issue} | {suggested_approach}`
 - DS&A Reviewer: `{severity} | {file}:{line} | {current_structure} | {access_pattern} | {recommended} | {rationale}`
 - Paradigm Enforcer: `{severity} | {file}:{line} | {paradigm} | {violation_type} | {description} | {suggestion}`
 - Efficiency Sentinel: `{severity} | {file}:{line} | {anti_pattern} | {impact} | {suggested_approach}`
+- Flow Integrator (if spawned): `{severity} | {file}:{line} | {edge_description} | {flow_path} | {issue_description} | {suggested_fix}`
 
-Parse each result set. If a subagent returned "No X findings.", record zero findings for that agent.
+Parse each result set. If a subagent returned "No X findings." (or "No flow-integration findings." for Flow Integrator), record zero findings for that agent.
 
 ---
 
@@ -233,6 +267,8 @@ If two or more agents flag the same `file:line` (within 5 lines tolerance):
 - List all contributing agents in the **Agent** field (e.g., "Complexity Analyst, Efficiency Sentinel")
 - Use the **highest severity** from any contributing agent
 - Combine issue descriptions
+
+**Note on flow-integrator overlap**: Flow Integrator's findings focus on behavioral navigation correctness. They may occasionally overlap with design-quality agent findings (once GitHub issue #134 ships) when both flag the same component file. The same dedup rules apply — merge and list both agents in the Agent field.
 
 ### 6b. Assign Severity Tiers
 
@@ -261,7 +297,7 @@ Record:
 
 ## Step 7: Write Report
 
-Read the report template at [report_template.md](report_template.md).
+Read the report template at `src/wrought/skills/forge-review/report_template.md`.
 
 Generate the report by filling in the template. Determine the output filename:
 
@@ -303,7 +339,12 @@ If `finding_id` and `tracker_path` were extracted from the loop state:
 - Output:
   ```
   Review complete. Original finding {finding_id} → Resolved.
-  {N} new findings added to tracker for follow-up (warnings → /rca-bugfix, suggestions → /simplify).
+
+  ZERO CARRY-OVERS — {N} new review findings MUST be resolved before session end:
+  {For each new F-number: "  F{N}: {severity} — {title} → {recommended action (/rca-bugfix or /simplify)}"}
+
+  Address warnings via /rca-bugfix and suggestions via /simplify NOW.
+  Do NOT proceed to /session-end until all review findings are Resolved.
   Review report: {output_path}
   ```
 
@@ -338,8 +379,11 @@ If any **Suggestion** findings exist:
 Output to the user:
 
 ```
-Review complete: {N} critical, {N} warnings, {N} suggestions across {N} files.
+Review complete: {N} critical, {N} warnings, {N} suggestions across {N} files ({AGENT_COUNT} agents run).
 Report saved to {output_path}.
+
+{If flow-integrator spawned}:
+Flow-integration pass was performed (diff touched navigation surfaces).
 
 {If critical > 0 or warnings > 0}:
 Findings detected ({N} critical, {N} warnings). Consider running `/finding` to create a Findings Tracker for remediation.
@@ -390,7 +434,7 @@ No `--batch` mode — review is always non-interactive (subagents work autonomou
 
 ## Findings Tracker Update Protocol
 
-When loop context is present (Step 1.5 extracted `finding_id` and `tracker_path`), follow the tracker update checklist below with these parameters:
+When loop context is present (Step 1.5 extracted `finding_id` and `tracker_path`), follow `_shared/tracker_update_checklist.md` with these parameters:
 
 | Parameter | Value |
 |-----------|-------|
@@ -399,57 +443,13 @@ When loop context is present (Step 1.5 extracted `finding_id` and `tracker_path`
 | `{ARTIFACT_TYPE}` | Review report |
 | `{ARTIFACT_PATH_PATTERN}` | `docs/reviews/{YYYY-MM-DD_HHMM}_{scope}.md` |
 
-## At the START of work
-
-Check if this work relates to a tracked finding:
-
-1. If input contains `F{N}` (e.g., "F1", "F3"), search `docs/findings/*_FINDINGS_TRACKER.md` for that finding
-2. If input is topic-based, search active trackers for a matching finding title
-3. If a match is found:
-   a. Read the tracker and any linked artifacts (finding report, investigation, design analysis)
-   b. Use these as context for the current work
-
-## At the END of work
-
-After writing the output artifact(s):
-
-1. Update the tracker's overview table: set `Stage` to `Reviewed`, set `Status` to `In Progress`
-2. Update the per-finding **Lifecycle** table — append row:
-   ```
-   | Reviewed | {YYYY-MM-DD HH:MM} UTC | {session} | [Review report]({report_path}) |
-   ```
-3. Check the resolution task: `[x] **Code review complete**...`
-4. Add changelog entry:
-   ```
-   | {YYYY-MM-DD HH:MM} UTC | {session} | FN stage -> Reviewed. Review report: docs/reviews/{YYYY-MM-DD_HHMM}_{scope}.md |
-   ```
-5. Update `Last Updated` timestamp at top of tracker
-6. Sync to GitHub Projects (NON-FATAL) — read `docs/reference/github_projects_sync_protocol.md`, follow Protocol B: Lifecycle Stage = Reviewed, Status = In Progress (`47fc9ee4`), Evidence = artifact path(s). If `**Project Item ID**:` is missing or `—`, skip sync with a note.
-
-## HANDOFF UPDATE
-
-After the standard handoff message to the user, add:
-
-```
-Tracker updated: {tracker_path} — FN stage -> Reviewed
-
-After /plan completes, update the tracker:
-- Stage -> Planned
-- Lifecycle row: `| Planned | {timestamp} | {session} | [Plan]({plan_path}) |`
-- Check task: `[x] **FN.3**: Implementation plan...`
-- Changelog: `FN stage -> Planned. Plan: {plan_path}`
-- GitHub sync (NON-FATAL): Protocol B — Lifecycle Stage = Planned (`a66cfac9`), Status = In Progress (`47fc9ee4`)
-```
-
-If no matching finding exists, proceed normally — not all work originates from findings.
-
 ### Lifecycle updates performed in Step 8:
 
-1. Update overview table: Stage -> "Reviewed", Status -> "In Progress"
+1. Update overview table: Stage → "Reviewed", Status → "In Progress"
 2. Append lifecycle row: `| Reviewed | {timestamp} | {session} | [Review report]({report_path}) |`
 3. Check task: `[x] **FN.5**: Code review...`
-4. Changelog: `FN stage -> Reviewed. Review report: {report_path}`
-5. If advancing to Resolved (clean or non-critical): also update Stage -> "Resolved", Status -> "Resolved", append second lifecycle row, check FN.5 task
+4. Changelog: `FN stage → Reviewed. Review report: {report_path}`
+5. If advancing to Resolved (clean or non-critical): also update Stage → "Resolved", Status → "Resolved", append second lifecycle row, check FN.5 task
 6. Sync to GitHub Projects (NON-FATAL): Protocol B — Lifecycle Stage = Reviewed, Status = In Progress
 
 When no loop context, skip all tracker updates.
