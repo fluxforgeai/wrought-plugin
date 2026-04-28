@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.2] - 2026-04-28
+
+### Fixed
+- **Plugin layout**: Moved plugin contents from repo root into `./plugins/wrought/` to match the canonical Anthropic + OpenAI marketplace convention. Claude Code v2.1.121 rejected the previous `"source": "."` syntax with "This plugin uses a source type your Claude Code version does not support." Reference structures: `anthropics/claude-code` and `openai/codex-plugin-cc` — both put each plugin under `./plugins/{name}/` with `marketplace.json` at the repo root pointing to the subdirectory. Move preserves git history (80 files renamed via `git mv`). Repo-root layout now: `.claude-plugin/marketplace.json` + top-level `README.md` + `LICENSE`. Plugin layout: `plugins/wrought/.claude-plugin/plugin.json` + `agents/` + `commands/` + `hooks/` + `scripts/` + `skills/` + `CHANGELOG.md`.
+
 ## [1.1.1] - 2026-04-28
 
 ### Fixed
