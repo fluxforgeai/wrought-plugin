@@ -1,0 +1,14 @@
+{
+  "name": "wrought-plugin",
+  "owner": {
+    "name": "FluxForge AI"
+  },
+  "description": "Wrought™ plugin marketplace — structured engineering methodology for Claude Code",
+  "plugins": [
+    {
+      "name": "wrought",
+      "source": ".",
+      "description": "Structured engineering methodology with cross-session findings tracking, dual-track pipelines, and multi-agent code review"
+    }
+  ]
+}

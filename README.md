@@ -4,11 +4,14 @@ A disciplined, pipeline-driven approach to software engineering that replaces ad
 
 ## Quick Start
 
-Install the plugin in your project:
+Install inside a Claude Code session:
 
-```bash
-claude plugin add fluxforgeai/wrought-plugin
 ```
+/plugin marketplace add fluxforgeai/wrought-plugin
+/plugin install wrought@wrought-plugin
+```
+
+The first command registers this repo as a Claude Code plugin marketplace; the second installs the `wrought` plugin from it. Restart your session if Claude Code prompts you to.
 
 **Step 1**: Start tracking work
 
