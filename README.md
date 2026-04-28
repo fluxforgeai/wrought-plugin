@@ -1,4 +1,4 @@
-# Wrought -- Structured Engineering Methodology for Claude Code
+# Wrought™ -- Structured Engineering Methodology for Claude Code
 
 A disciplined, pipeline-driven approach to software engineering that replaces ad-hoc coding with structured investigation, design, and implementation workflows.
 
@@ -7,7 +7,7 @@ A disciplined, pipeline-driven approach to software engineering that replaces ad
 Install the plugin in your project:
 
 ```bash
-claude plugin add fluxforgeai/wrought
+claude plugin add fluxforgeai/wrought-plugin
 ```
 
 **Step 1**: Start tracking work
@@ -94,7 +94,20 @@ Starts with structured incident capture, proceeds through investigation and root
 ## Getting Help
 
 - Website: [fluxforge.ai](https://fluxforge.ai)
-- For consulting and custom integrations, contact FluxForge AI
+- For consulting and custom integrations, contact FluxForge AI™
+
+## Brand Use Notice
+
+The source code in this repository is licensed under MIT (see LICENSE). However,
+the names "Wrought", "FluxForge AI", and any associated logos or wordmarks are
+trademarks of FluxForge AI and are not licensed under MIT. You are welcome to
+fork, modify, redistribute, and build on this code under MIT terms. You are not
+licensed to use the names "Wrought" or "FluxForge AI" to market a competing or
+substantially-derivative product without express written permission.
+
+If you build something on top of this code, please pick your own name. We will
+help amplify your work; we will not let you confuse our users about whose work
+they are using.
 
 ## License
 
