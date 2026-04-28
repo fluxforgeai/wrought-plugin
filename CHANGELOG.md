@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.1] - 2026-04-28
+
+### Fixed
+- **Install path**: Added `.claude-plugin/marketplace.json` so Claude Code's `/plugin marketplace add fluxforgeai/wrought-plugin` actually registers this repo as an installable marketplace. Without this file, `/plugin add` was opening the Discover picker for the official marketplace instead of installing the plugin.
+- **README install command**: Updated from the incorrect single-step `claude plugin add fluxforgeai/wrought-plugin` to the correct two-step Claude Code flow:
+  ```
+  /plugin marketplace add fluxforgeai/wrought-plugin
+  /plugin install wrought@wrought-plugin
+  ```
+  Reference: https://code.claude.com/docs/en/plugin-marketplaces.md
+
 ## [1.1.0] - 2026-04-28
 
 ### Added
