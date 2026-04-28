@@ -1,7 +1,7 @@
 ---
 name: safeguard
 description: "Environment profile classification. Classifies a project's deployment environment (Zero/A/B/C) and deployment paradigm (Docker/Non-Docker/Hybrid). Produces a persistent profile consumed by all downstream skills."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[project-path]"
 wrought:
   version: "1.0"
@@ -13,7 +13,7 @@ wrought:
       - write_file
   platforms:
     claude-code:
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Environment Profiler"
     expertise:

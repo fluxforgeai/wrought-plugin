@@ -1,7 +1,7 @@
 ---
 name: analyze
 description: "Strategic system analysis for health assessment, pattern recognition, component deep dives, risk assessment, and architecture review. Use for proactive system understanding beyond reactive incident response."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[mode] [target]"
 allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write
 wrought:
@@ -17,7 +17,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, WebFetch, WebSearch, Write"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Systems Analyst"
     expertise:

@@ -3,7 +3,7 @@ name: investigate
 description: "Deep investigation of an incident or finding. Performs thorough root cause analysis with hypothesis testing and evidence gathering. Use after /incident or /finding."
 context: fork
 agent: general-purpose
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[finding-ref or description]"
 wrought:
   version: "1.0"
@@ -16,7 +16,7 @@ wrought:
       - run_command
   platforms:
     claude-code:
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Investigation Analyst"
     expertise:
@@ -97,9 +97,9 @@ Determine the input type and route accordingly:
 
 ```
 IF input references a finding report (docs/findings/*.md) OR starts with "Finding:":
-    -> Confirmation Mode (abbreviated investigation)
+    → Confirmation Mode (abbreviated investigation)
 ELSE:
-    -> Full Investigation Mode (standard investigation)
+    → Full Investigation Mode (standard investigation)
 ```
 
 ### Full Investigation Mode (incidents)
@@ -139,14 +139,14 @@ When a proactive finding is provided, the cause is often already known. The inve
 First, identify what technology/API/library the incident involves. Then search for documentation specific to that technology.
 
 **EXAMPLES** (use these as a pattern, NOT as default searches):
-- If the incident involves **Iterable**: Search "Iterable API {relevant_topic} {current_month_year}"
-- If the incident involves **Intercom**: Search "Intercom API {relevant_topic} {current_month_year}"
+- If the incident involves **Stripe**: Search "Stripe API {relevant_topic} {current_month_year}"
+- If the incident involves **Slack**: Search "Slack API {relevant_topic} {current_month_year}"
 - If the incident involves **GCS/Google Cloud Storage**: Search "Google Cloud Storage {relevant_topic} {current_month_year}"
 - If the incident involves **httpx/requests**: Search "Python httpx {relevant_topic} {current_month_year}"
 - If the incident involves **FastAPI**: Search "FastAPI {relevant_topic} {current_month_year}"
 - If the incident involves **PostgreSQL**: Search "PostgreSQL {relevant_topic} {current_month_year}"
 
-**IMPORTANT**: Only search documentation relevant to the actual incident. Do NOT default to searching Iterable or Intercom docs unless the incident specifically involves those APIs.
+**IMPORTANT**: Only search documentation relevant to the actual incident. Do NOT default to searching Stripe or Slack docs unless the incident specifically involves those APIs.
 
 From the documentation, extract:
 - Rate limits, timeouts, expected behavior
@@ -190,49 +190,10 @@ Construct a precise timeline of events:
 
 ## Findings Tracker Update Protocol
 
-## At the START of work
-
-Check if this work relates to a tracked finding:
-
-1. If input contains `F{N}` (e.g., "F1", "F3"), search `docs/findings/*_FINDINGS_TRACKER.md` for that finding
-2. If input is topic-based, search active trackers for a matching finding title
-3. If a match is found:
-   a. Read the tracker and any linked artifacts (finding report, investigation, design analysis)
-   b. Use these as context for the current work
-
-## At the END of work
-
-After writing the output artifact(s):
-
-1. Update the tracker's overview table: set `Stage` to `Investigating`, set `Status` to `In Progress`
-2. Update the per-finding **Lifecycle** table — append row:
-   ```
-   | Investigating | {YYYY-MM-DD HH:MM} UTC | {session} | [Investigation]({report_path}) |
-   ```
-3. Check the resolution task: `[x] **FN.1: Investigate — confirm root cause and scope**...`
-4. Add changelog entry:
-   ```
-   | {YYYY-MM-DD HH:MM} UTC | {session} | FN stage -> Investigating. Investigation: {report_path} |
-   ```
-5. Update `Last Updated` timestamp at top of tracker
-6. Sync to GitHub Projects (NON-FATAL) — read `docs/reference/github_projects_sync_protocol.md`, follow Protocol B: Lifecycle Stage = Investigating (`7ec022fd`), Status = In Progress (`47fc9ee4`), Evidence = artifact path(s). If `**Project Item ID**:` is missing or `—`, skip sync with a note.
-
-## HANDOFF UPDATE
-
-After the standard handoff message to the user, add:
-
-```
-Tracker updated: {tracker_path} — FN stage -> Investigating
-
-After /plan completes, update the tracker:
-- Stage -> Planned
-- Lifecycle row: `| Planned | {timestamp} | {session} | [Plan]({plan_path}) |`
-- Check task: `[x] **FN.3**: Implementation plan...`
-- Changelog: `FN stage -> Planned. Plan: {plan_path}`
-- GitHub sync (NON-FATAL): Protocol B — Lifecycle Stage = Planned (`a66cfac9`), Status = In Progress (`47fc9ee4`)
-```
-
-If no matching finding exists, proceed normally — not all work originates from findings.
+See [tracker_update_checklist.md](../_shared/tracker_update_checklist.md)
+- Stage: "Investigating"
+- Task: FN.1 (Investigate — confirm root cause and scope)
+- GitHub field: `7ec022fd`
 
 ---
 

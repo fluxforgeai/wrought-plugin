@@ -1,7 +1,7 @@
 ---
 name: rca-bugfix
 description: "Root cause analysis and bug fix procedure. Investigates bugs, documents the RCA, and creates an implementation prompt for the fix. Use after /investigate or /finding."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[finding-ref or description]"
 wrought:
   version: "1.0"
@@ -15,7 +15,7 @@ wrought:
       - run_command
   platforms:
     claude-code:
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "RCA Engineer"
     expertise:
@@ -105,92 +105,24 @@ Before starting, check for upstream artifacts: `docs/investigations/*.md` (from 
 
 **ALL files MUST use this exact format**: `{YYYY-MM-DD_HHMM}_{issue_name}.md`
 
-Yes: `2026-01-22_1700_stream_download_timeout.md`
-No: `RCA_STREAM_DOWNLOAD_TIMEOUT_2026-01-22.md` — no prefix, date comes FIRST
+✅ `2026-01-22_1700_stream_download_timeout.md`
+❌ `RCA_STREAM_DOWNLOAD_TIMEOUT_2026-01-22.md` — no prefix, date comes FIRST
 
 ---
 
 ### Context Check
 
-## Step 1: Initial Context Check
-
-Ask the user to run `/context` and share the output.
-
-Based on the context usage:
-
-### If context > 80% (not enough room):
-1. Perform an expert-level RCA of the issue
-2. Write the RCA to `docs/RCAs/{YYYY-MM-DD_HHMM}_{name}.md`
-3. Tell the user: "Context is high. RCA saved. Please run `/session-end` and start a new session."
-4. **STOP** - Do not proceed further
-
-### If context <= 80% (enough room):
-1. Perform an expert-level RCA of the issue
-2. Write the RCA to `docs/RCAs/{YYYY-MM-DD_HHMM}_{name}.md`
-3. Using the RCA, write an expert-level prompt for `/plan` mode
-4. Write the prompt to `docs/prompts/{YYYY-MM-DD_HHMM}_{name}.md`
-5. Proceed to Step 2
-
-## Step 2: Pre-Planning Context Check
-
-Ask the user to run `/context` again and share the output.
-
-### If context > 85% (not enough room for planning):
-1. Tell the user: "Context too high for planning. Please run `/session-end` and start a new session."
-2. Tell the user: "In the next session, run `/plan` with the prompt saved at `docs/prompts/{YYYY-MM-DD_HHMM}_{name}.md`"
-3. **STOP**
-
-### If context <= 85% (enough room):
-1. Tell the user: "Ready for planning. Please run `/plan`"
-2. When in plan mode, use the expert-level prompt you wrote to guide the implementation plan
+See [context_check.md](../_shared/context_check.md)
+- Task type: "RCA" / Output: `docs/RCAs/`
 
 ---
 
 ## Findings Tracker Update Protocol
 
-## At the START of work
-
-Check if this work relates to a tracked finding:
-
-1. If input contains `F{N}` (e.g., "F1", "F3"), search `docs/findings/*_FINDINGS_TRACKER.md` for that finding
-2. If input is topic-based, search active trackers for a matching finding title
-3. If a match is found:
-   a. Read the tracker and any linked artifacts (finding report, investigation, design analysis)
-   b. Use these as context for the current work
-
-## At the END of work
-
-After writing the output artifact(s):
-
-1. Update the tracker's overview table: set `Stage` to `RCA Complete`, set `Status` to `In Progress`
-2. Update the per-finding **Lifecycle** table — append row:
-   ```
-   | RCA Complete | {YYYY-MM-DD HH:MM} UTC | {session} | [RCA + Prompt]({rca_path} + {prompt_path}) |
-   ```
-3. Check the resolution task: `[x] **FN.2: RCA + fix design**...`
-4. Add changelog entry:
-   ```
-   | {YYYY-MM-DD HH:MM} UTC | {session} | FN stage -> RCA Complete. RCA + Prompt: {rca_path} + {prompt_path} |
-   ```
-5. Update `Last Updated` timestamp at top of tracker
-6. Sync to GitHub Projects (NON-FATAL) — read `docs/reference/github_projects_sync_protocol.md`, follow Protocol B: Lifecycle Stage = RCA Complete (`3e226861`), Status = In Progress (`47fc9ee4`), Evidence = artifact path(s). If `**Project Item ID**:` is missing or `—`, skip sync with a note.
-
-## HANDOFF UPDATE
-
-After the standard handoff message to the user, add:
-
-```
-Tracker updated: {tracker_path} — FN stage -> RCA Complete
-
-After /plan completes, update the tracker:
-- Stage -> Planned
-- Lifecycle row: `| Planned | {timestamp} | {session} | [Plan]({plan_path}) |`
-- Check task: `[x] **FN.3**: Implementation plan...`
-- Changelog: `FN stage -> Planned. Plan: {plan_path}`
-- GitHub sync (NON-FATAL): Protocol B — Lifecycle Stage = Planned (`a66cfac9`), Status = In Progress (`47fc9ee4`)
-```
-
-If no matching finding exists, proceed normally — not all work originates from findings.
+See [tracker_update_checklist.md](../_shared/tracker_update_checklist.md)
+- Stage: "RCA Complete"
+- Task: FN.2 (RCA + fix design)
+- GitHub field: `3e226861`
 
 ---
 
@@ -285,7 +217,6 @@ When writing prompts for `/plan` mode, use this structure:
 4. Call `ExitPlanMode` to present the plan for user approval
 5. **Wait for user approval** before proceeding to implementation
 6. After plan approval, invoke `/wrought-rca-fix` to start the autonomous bugfix loop with test verification.
-```
 
 ---
 

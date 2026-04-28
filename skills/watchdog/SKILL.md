@@ -1,7 +1,7 @@
 ---
 name: watchdog
-description: "Passive monitoring with incident tagging. Creates autonomous bash monitoring scripts that watch logs after fixes, create incident files, and send Telegram alerts on errors."
-disable-model-invocation: true
+description: "Passive monitoring with incident tagging. Creates autonomous bash monitoring scripts that watch logs after fixes, create incident files, and send alerts via your configured backend(s) on errors."
+disable-model-invocation: false
 argument-hint: "[target or log-path]"
 wrought:
   version: "1.0"
@@ -13,7 +13,7 @@ wrought:
       - write_file
   platforms:
     claude-code:
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Monitoring Script Generator"
     expertise:
@@ -78,22 +78,22 @@ for a relevant tracker and note it for context, but do not enforce stage require
 
 ## Description
 
-A **fully autonomous bash script** that monitors logs after a fix is implemented. Runs independently without Claude - creates incident files and sends Telegram alerts when errors occur.
+A **fully autonomous bash script** that monitors logs after a fix is implemented. Runs independently without Claude — creates incident files and sends alerts via your configured backend(s) when errors occur.
 
 ### Key Behaviors
 
 | Setting | Value |
 |---------|-------|
-| Monitoring style | **Passive** - watch logs/messages |
+| Monitoring style | **Passive** — watch logs/messages |
 | Check interval | **60 seconds** |
-| On error detected | **Create incident file + Telegram alert** |
+| On error detected | **Create incident file + fan out alerts via all configured backends** |
 | Error de-duplication | **Don't repeat same/similar errors** |
 | After incident | **Continue monitoring** (don't stop) |
 | Manual stop | **Run until user stops it** |
-| Alerts | **Log + Telegram** (different alerts for system vs fix-related) |
+| Alerts | **Log + configured backends** (different messages for system vs fix-related) |
 | Incident tagging | **"system" vs "fix-related"** based on pattern matched |
 | Status surfacing | **Every 60 seconds** to status file |
-| **Autonomy** | **Runs independently** - no Claude session required |
+| **Autonomy** | **Runs independently** — no Claude session required |
 
 ### Autonomous Operation
 
@@ -101,7 +101,7 @@ A **fully autonomous bash script** that monitors logs after a fix is implemented
 
 1. **Does NOT require Claude** to be running
 2. **Does NOT require user to be awake**
-3. **Sends Telegram alerts** directly to your phone
+3. **Sends alerts via configured backends** (default: local-file + ntfy.sh; optional: Telegram, Slack, webhook, email)
 4. **Creates incident JSON files** for later review
 
 **Workflow when you're asleep:**
@@ -109,18 +109,18 @@ A **fully autonomous bash script** that monitors logs after a fix is implemented
 1. You start watchdog and go to sleep
 2. Watchdog detects error at 3am
 3. Creates incident file: /tmp/watchdog_{id}_incidents/fix-related_20260122_030000.json
-4. Sends Telegram: "🎯🔴 WATCHDOG: Fix-Related Error! Run /incident in Claude"
-5. You wake up, see Telegram notification
+4. Fans out to all WATCHDOG_BACKENDS dispatchers (e.g. ntfy push → your phone, Slack channel, Telegram bot)
+5. You wake up, see the push notification
 6. Start Claude, run: /incident {error summary}
    OR read incident files: cat /tmp/watchdog_{id}_incidents/*.json
 ```
 
 **What the script can do autonomously:**
-- Check docker logs every 60 seconds
+- Fetch recent text from the configured monitor source (default: `docker logs ${CONTAINER_NAME}`)
 - Detect errors using pattern matching
 - Tag incidents as "system" or "fix-related"
 - Create JSON incident files with full stack traces
-- Send Telegram alerts with error details
+- Fan out alerts to every configured backend (independent failure isolation)
 - Update status file for later review
 - De-duplicate repeated errors
 
@@ -128,6 +128,111 @@ A **fully autonomous bash script** that monitors logs after a fix is implemented
 - Running `/incident` to create formal incident report
 - Investigating the root cause
 - Implementing fixes
+
+---
+
+## Prerequisites
+
+- **Zero** for the zero-config default (`local-file` + `ntfy`) — no accounts, no credentials
+- **Telegram**: bot created via `@BotFather` + chat ID looked up via `getUpdates`
+- **Slack**: incoming-webhook URL from a Slack workspace admin
+- **webhook**: any HTTP endpoint that accepts POST JSON; optional auth via `WEBHOOK_HEADERS`
+- **email**: `sendmail` binary on PATH (or an SMTP forwarder configured to accept sendmail input)
+- **Docker-logs monitor source**: a running container named in `CONTAINER_NAME`
+- **Network dispatchers** (`ntfy`, `telegram`, `slack`, `webhook`): `curl` on PATH
+- **JSON-heavy backends** (`slack`, `webhook`, `local-file` with non-ASCII messages): `jq` or `python3` on PATH for robust escaping (falls back to sed if neither is available)
+
+See `docs/setup/watchdog.md` for step-by-step per-backend setup.
+
+---
+
+## Backends
+
+Dispatcher scripts live in `.claude/skills/watchdog/dispatchers/*.sh` and share one interface:
+
+```
+dispatcher.sh {category} {message} {severity}
+```
+
+Each reads its own env vars, writes to stdout/stderr (captured by the template's log), and returns an exit code (`0`=success, `1`=transient/retry, `2`=permanent misconfig, `126`=required binary missing). The template fans out to every backend listed in `WATCHDOG_BACKENDS` with failure isolation — one backend's misconfig cannot stop another from firing.
+
+### local-file (default; always-on audit trail)
+
+- **Purpose**: JSON incident record per alert on local disk; first-line defence even when network is down
+- **Required env**: none (`SESSION_ID` passed by the template)
+- **Output**: `/tmp/watchdog_${SESSION_ID}_incidents/alert_{category}_{unix_ts}_{pid}.json`
+- **Config example**: `WATCHDOG_BACKENDS=local-file`
+
+### ntfy (default; free push notifications)
+
+- **Purpose**: no-signup push to phone/desktop via ntfy.sh or a self-hosted ntfy server
+- **Required env**: `NTFY_TOPIC`
+- **Optional env**: `NTFY_SERVER` (default `https://ntfy.sh`)
+- **Severity → priority**: `high=5`, `medium=4`, `low=3`, `info=2`
+- **Config example**: `WATCHDOG_BACKENDS=local-file,ntfy; NTFY_TOPIC=my-watchdog-topic`
+
+### telegram (legacy default when CONTAINER_NAME is set)
+
+- **Purpose**: Telegram bot message; byte-exact replica of pre-Stage-1 behaviour
+- **Required env**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+- **Format**: `parse_mode=HTML` with category-specific emojis (`🎯🔴` fix-related, `⚠️` system, `🐕` info)
+- **Config example**: `WATCHDOG_BACKENDS=telegram; TELEGRAM_BOT_TOKEN=...; TELEGRAM_CHAT_ID=...`
+
+### slack
+
+- **Purpose**: Slack channel post via incoming webhook
+- **Required env**: `SLACK_WEBHOOK_URL`
+- **Severity → color**: `high=danger`, `medium=warning`, `low|info=good`
+- **Config example**: `WATCHDOG_BACKENDS=local-file,slack; SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...`
+
+### webhook (generic HTTP POST)
+
+- **Purpose**: structured JSON POST to any endpoint; use for PagerDuty Events v2, Discord webhooks, custom APIs
+- **Required env**: `WEBHOOK_URL`
+- **Optional env**: `WEBHOOK_HEADERS` (newline-separated `Key: Value` lines — e.g. for `Authorization: Bearer …`)
+- **Payload**: `{"session_id", "timestamp", "category", "severity", "message"}`
+- **Config example**: `WATCHDOG_BACKENDS=webhook; WEBHOOK_URL=https://api.example.com/alerts`
+
+### email
+
+- **Purpose**: plaintext email via local sendmail (or any sendmail-compatible forwarder)
+- **Required env**: `EMAIL_TO`
+- **Optional env**: `EMAIL_FROM` (default `watchdog@localhost`)
+- **Required binary**: `sendmail` on PATH (`exit 126` if missing)
+- **Subject format**: `[watchdog/{severity}] {category}: {first-line-truncated-to-50-chars}`
+- **Config example**: `WATCHDOG_BACKENDS=local-file,email; EMAIL_TO=ops@example.com`
+
+---
+
+## Environment Variables
+
+| Variable | Purpose | Consumed by | Default |
+|---|---|---|---|
+| `WATCHDOG_BACKENDS` | CSV list of dispatchers to fan out to | template (router) | `local-file,ntfy` — or `telegram` if `CONTAINER_NAME` set (Decision #15) |
+| `WATCHDOG_MONITOR_CMD` | Shell command producing log text on stdout | template (source) | `docker logs ${CONTAINER_NAME} --since ${INTERVAL}s` |
+| `WATCHDOG_DISPATCH_TIMEOUT` | Per-dispatcher HTTP/exec timeout in seconds | network dispatchers | `10` |
+| `WATCHDOG_DISPATCHER_DIR` | Absolute path to dispatchers directory | template (router) | `$(dirname $0)/dispatchers` |
+| `CONTAINER_NAME` | Docker container for legacy monitor source + legacy cred-fallback | template | unset |
+| `NTFY_TOPIC` | ntfy.sh topic | ntfy | unset |
+| `NTFY_SERVER` | ntfy server URL | ntfy | `https://ntfy.sh` |
+| `TELEGRAM_BOT_TOKEN` | Bot token from `@BotFather` | telegram | unset |
+| `TELEGRAM_CHAT_ID` | Target chat ID (use `/getUpdates` to discover) | telegram | unset |
+| `SLACK_WEBHOOK_URL` | Slack incoming webhook URL | slack | unset |
+| `WEBHOOK_URL` | Generic POST endpoint | webhook | unset |
+| `WEBHOOK_HEADERS` | Newline-separated auth headers (`Key: Value`) | webhook | unset |
+| `EMAIL_TO` | Recipient address | email | unset |
+| `EMAIL_FROM` | Sender address | email | `watchdog@localhost` |
+
+Full reference + setup walkthroughs: `docs/setup/watchdog.md`. Sample env file: `.env.watchdog.example` at repo root.
+
+### Credential priority (highest wins)
+
+1. **Host environment** — already exported when watchdog is launched
+2. `./.env.watchdog` then `../.env.watchdog` — per-project watchdog config
+3. `./.env` then `../.env` — project-wide env
+4. `docker exec ${CONTAINER_NAME} printenv VAR` — legacy Docker+Telegram fallback (only when `CONTAINER_NAME` is set and `docker` is on PATH)
+
+Once a variable is resolved at a given tier, lower tiers are skipped for it. This makes host-env overrides safe in any shell session — no file edits required.
 
 ---
 
@@ -156,6 +261,10 @@ A **fully autonomous bash script** that monitors logs after a fix is implemented
    - `SYSTEM_PATTERNS`: General errors (always the same)
    - `FIX_PATTERNS`: Specific to what was fixed (varies per session)
 
+5. **Determine the monitor source and backend selection**:
+   - **Monitor source**: if the target is a Docker container, the default `docker logs ${CONTAINER_NAME} --since ${INTERVAL}s` works. For other sources (pytest output, tail of a file, SSH command, shell pipeline), set `WATCHDOG_MONITOR_CMD` to any shell command that produces log text on stdout.
+   - **Backend selection**: if `WATCHDOG_BACKENDS` is unset, the template picks the default per Decision #15 (`telegram` if `CONTAINER_NAME` is set; otherwise `local-file,ntfy`). Users can override via env, `.env.watchdog`, or by editing the startup snippet before launching.
+
 ### Step 2: Create Monitoring Session
 
 1. **Generate a unique session ID**:
@@ -164,9 +273,10 @@ A **fully autonomous bash script** that monitors logs after a fix is implemented
    ```
 
 2. **Identify log sources** to monitor:
-   - Backend container: `docker logs {container_name} --since 1m`
-   - Other relevant containers or log files
-   - Ask the user which container(s) or log files to monitor
+   - Docker container: `docker logs {container_name} --since 1m` (default)
+   - Pytest / CI output: `uv run pytest tests/ --tb=no -q 2>&1 | tail -30`
+   - File tail: `tail -n 200 /var/log/app.log`
+   - Any other shell pipeline producing text on stdout
 
 3. **Create the monitoring report** at `docs/monitoring/{YYYY-MM-DD_HHMM}_{name}.md`
 
@@ -184,11 +294,11 @@ Use the Bash tool with `run_in_background: true` to start the monitoring script.
 
 **IMPORTANT**: The script must:
 1. Run in an infinite loop
-2. Check logs every 60 seconds
+2. Check the configured monitor source every 60 seconds
 3. De-duplicate errors using MD5 hashes
 4. **Tag incidents as "system" or "fix-related"**
 5. Create incident files with category tag
-6. **Send DIFFERENT Telegram alerts** for each category
+6. **Fan out to every backend** in `WATCHDOG_BACKENDS` via `send_alert` (distinct messages per category)
 7. **Write status file every 60 seconds** for Claude to read
 8. Continue monitoring after incidents (don't exit)
 
@@ -196,14 +306,15 @@ Read the script template from `watchdog_template.sh` (in this skill's directory)
 - `{session_id}` — the generated session ID
 - `{fix_patterns_pipe_separated}` — pipe-separated regex patterns for the fix (e.g., `ReadTimeout|ConnectTimeout|timed out`)
 - `{fix_description}` — human-readable description of what was fixed
-- `${CONTAINER_NAME}` — the Docker container name to monitor
+
+Backend selection (`WATCHDOG_BACKENDS`) and monitor source (`WATCHDOG_MONITOR_CMD`) are read from the environment at runtime — set them before launching or via `.env.watchdog` / `.env`. The template resolves Decision #15 defaults if unset.
 
 ### Step 5: Execute Background Script
 
 **CRITICAL**: Before executing, you MUST replace these placeholders:
-- `{session_id}` - The generated session ID
-- `{fix_patterns_pipe_separated}` - Pipe-separated regex patterns for the fix (e.g., `ReadTimeout|ConnectTimeout|timed out`)
-- `{fix_description}` - Human-readable description of what was fixed
+- `{session_id}` — The generated session ID
+- `{fix_patterns_pipe_separated}` — Pipe-separated regex patterns for the fix (e.g., `ReadTimeout|ConnectTimeout|timed out`)
+- `{fix_description}` — Human-readable description of what was fixed
 
 Use the Bash tool with these parameters:
 
@@ -221,10 +332,11 @@ After starting the background process, respond with a **simple, clean confirmati
 Watchdog started. Session: {session_id}
 
 Watching for: {brief description of fix patterns}
-Alerts: Telegram + incident files
+Monitor source: {summary of WATCHDOG_MONITOR_CMD}
+Backends: {list of WATCHDOG_BACKENDS}
 Interval: 60 seconds
 
-Safe to sleep - I'll alert you via Telegram if errors occur.
+Safe to sleep - I'll alert you via {the first push-capable backend} if errors occur.
 
 To check status: "check watchdog"
 To stop: "stop watchdog"
@@ -245,7 +357,7 @@ Keep it short and actionable.
 - Do NOT continuously check the logs
 - Do NOT poll the background process
 - The status file is updated every 60 seconds
-- Telegram alerts provide immediate push notifications
+- Configured push backends provide immediate notifications; local-file provides the audit trail
 
 The user can:
 - Ask you to check watchdog status (you'll read the status file)
@@ -370,16 +482,17 @@ These are determined per-session based on what was fixed. Examples:
 ## Notes
 
 ### Autonomous Operation
-- **Runs as standalone bash script** - does NOT need Claude running
-- **Safe to start and go to sleep** - will alert you via Telegram
-- **Survives Claude session end** - keeps running until manually stopped
-- **Creates incident files** - review them when you wake up
+- **Runs as standalone bash script** — does NOT need Claude running
+- **Safe to start and go to sleep** — push backends deliver immediate alerts
+- **Survives Claude session end** — keeps running until manually stopped
+- **Creates incident files** — review them when you wake up
 
 ### Monitoring Behavior
 - Status file updated every 60 seconds
-- Fix-related incidents get red Telegram alerts (🎯🔴) - high priority!
-- System incidents get yellow Telegram alerts (⚠️) - lower priority
+- Fix-related incidents use severity `high` — red alerts via push backends (🎯🔴 on Telegram, Priority=5 on ntfy, `color=danger` on Slack)
+- System incidents use severity `medium` — warnings (⚠️ on Telegram, Priority=4 on ntfy, `color=warning` on Slack)
 - De-duplication prevents spam for repeated errors
+- Backend failures are isolated — one misconfig doesn't stop another backend from firing
 
 ### Cleanup
 - Always stop watchdog when no longer needed: `kill $(cat /tmp/watchdog_{id}.pid)`

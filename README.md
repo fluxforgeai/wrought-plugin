@@ -18,7 +18,7 @@ claude plugin add fluxforgeai/wrought-plugin
 
 **Step 2**: Follow the pipeline
 
-- **Proactive** (new features, improvements): `/research` -> `/design` -> `/blueprint` -> `/wrought-implement` -> `/forge-review`
+- **Proactive** (new features, improvements): `/research` -> `/design` -> [`/ux-design`] -> `/blueprint` -> `/wrought-implement` -> `/forge-review`
 - **Reactive** (bugs, incidents): `/incident` -> `/investigate` -> `/rca-bugfix` -> `/wrought-rca-fix` -> `/forge-review`
 
 **Step 3**: Review
@@ -43,10 +43,11 @@ claude plugin add fluxforgeai/wrought-plugin
 |-------|-------------|
 | `/research` | Deep research with external sources and documentation review |
 | `/design` | Interactive design analysis with tradeoff evaluation and recommendations |
+| `/ux-design` | Generate a Design Brief — application-type-aware design system, typography, colour, motion, anti-patterns. Used between `/design` and `/blueprint` for frontend work. |
 | `/blueprint` | Transform design into implementation spec and prompt for /plan |
 | `/investigate` | Root cause investigation with hypothesis testing and evidence gathering |
 | `/rca-bugfix` | Root cause analysis document and fix design with implementation prompt |
-| `/forge-review` | Multi-agent code review (complexity, data structures, paradigm, efficiency) |
+| `/forge-review` | Multi-agent code review (complexity, data structures, paradigm, efficiency, flow-integrity) |
 
 ### Tier 3: Advanced
 
@@ -71,7 +72,7 @@ claude plugin add fluxforgeai/wrought-plugin
 ### Proactive Track (Features, Improvements, Tech Debt)
 
 ```
-/finding -> /research -> /design -> /blueprint -> /plan -> /wrought-implement -> /forge-review
+/finding -> /research -> /design -> [/ux-design] -> /blueprint -> /plan -> /wrought-implement -> /forge-review
 ```
 
 Each step produces artifacts consumed by the next. The pipeline enforces quality gates -- you cannot skip steps without explicit override.

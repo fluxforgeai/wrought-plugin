@@ -1,7 +1,7 @@
 ---
 name: incident
 description: "Document what happened during an incident. Creates a factual record of WHAT happened, not WHY. Use when an incident occurs and needs documentation."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[description]"
 allowed-tools: Read, Grep, Glob, Write, Bash
 wrought:
@@ -16,7 +16,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, Write, Bash"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Incident Documenter"
     expertise:

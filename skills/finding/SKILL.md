@@ -1,7 +1,7 @@
 ---
 name: finding
 description: "Log a proactive discovery that needs attention. Creates a factual record of WHAT was found with classification and a Findings Tracker. Use for analysis discoveries, review findings, or inspection results."
-disable-model-invocation: true
+disable-model-invocation: false
 argument-hint: "[description]"
 allowed-tools: Read, Grep, Glob, Write
 wrought:
@@ -15,7 +15,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, Write"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Finding Classifier"
     expertise:
@@ -145,7 +145,7 @@ After writing the individual finding report(s), create or update a Findings Trac
 The `{findings_name}` is a concise snake_case descriptor of what the findings are about.
 
 **Examples**:
-- `2026-02-02_1639_iterable_extraction_pipeline_FINDINGS_TRACKER.md`
+- `2026-02-02_1639_billing_reconciliation_pipeline_FINDINGS_TRACKER.md`
 - `2026-03-15_0900_auth_authorization_gaps_FINDINGS_TRACKER.md`
 - `2026-04-01_1400_api_rate_limiting_FINDINGS_TRACKER.md`
 
@@ -209,9 +209,9 @@ Write to: `docs/findings/{YYYY-MM-DD_HHMM}_{findings_name}_FINDINGS_TRACKER.md`
 
 **Created**: {YYYY-MM-DD HH:MM} UTC
 **Last Updated**: {YYYY-MM-DD HH:MM} UTC
-**Origin**: {What triggered these findings, e.g., "Systems analysis of inAppDelivery extraction"}
+**Origin**: {What triggered these findings, e.g., "Systems analysis of payments service"}
 **Session**: {Session number, if known}
-**Scope**: {One-line description of what this tracker covers, e.g., "Iterable batch extraction reliability and monitoring"}
+**Scope**: {One-line description of what this tracker covers, e.g., "Webhook delivery reliability and retry handling"}
 
 ---
 

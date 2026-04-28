@@ -1,7 +1,7 @@
 ---
 name: blueprint
-description: "Transform a design into an implementation spec. Creates a blueprint document and an implementation prompt for /plan mode. Use after /design or /research."
-disable-model-invocation: true
+description: "Transform a design into an implementation spec. Creates a blueprint document and an implementation prompt for /plan mode. Use after /design, /ux-design, or /research."
+disable-model-invocation: false
 argument-hint: "[design-ref or topic]"
 allowed-tools: Read, Grep, Glob, Write
 wrought:
@@ -15,7 +15,7 @@ wrought:
   platforms:
     claude-code:
       allowed-tools: "Read, Grep, Glob, Write"
-      disable-model-invocation: true
+      disable-model-invocation: false
   agent:
     role: "Implementation Architect"
     expertise:
@@ -99,92 +99,24 @@ The user has described a feature or change to implement. Reason thoroughly about
 
 **ALL files MUST use this exact format**: `{YYYY-MM-DD_HHMM}_{feature_name}.md`
 
-Yes: `2026-01-27_1200_csv_migration_schema_drift.md`
-No: `BLUEPRINT_CSV_MIGRATION_2026-01-27.md` — no prefix, date comes FIRST
+✅ `2026-01-27_1200_csv_migration_schema_drift.md`
+❌ `BLUEPRINT_CSV_MIGRATION_2026-01-27.md` — no prefix, date comes FIRST
 
 ---
 
 ### Context Check
 
-## Step 1: Initial Context Check
-
-Ask the user to run `/context` and share the output.
-
-Based on the context usage:
-
-### If context > 80% (not enough room):
-1. Perform an expert-level Blueprint of the feature
-2. Write the Blueprint to `docs/blueprints/{YYYY-MM-DD_HHMM}_{name}.md`
-3. Tell the user: "Context is high. Blueprint saved. Please run `/session-end` and start a new session."
-4. **STOP** - Do not proceed further
-
-### If context <= 80% (enough room):
-1. Perform an expert-level Blueprint of the feature
-2. Write the Blueprint to `docs/blueprints/{YYYY-MM-DD_HHMM}_{name}.md`
-3. Using the Blueprint, write an expert-level prompt for `/plan` mode
-4. Write the prompt to `docs/prompts/{YYYY-MM-DD_HHMM}_{name}.md`
-5. Proceed to Step 2
-
-## Step 2: Pre-Planning Context Check
-
-Ask the user to run `/context` again and share the output.
-
-### If context > 85% (not enough room for planning):
-1. Tell the user: "Context too high for planning. Please run `/session-end` and start a new session."
-2. Tell the user: "In the next session, run `/plan` with the prompt saved at `docs/prompts/{YYYY-MM-DD_HHMM}_{name}.md`"
-3. **STOP**
-
-### If context <= 85% (enough room):
-1. Tell the user: "Ready for planning. Please run `/plan`"
-2. When in plan mode, use the expert-level prompt you wrote to guide the implementation plan
+See [context_check.md](../_shared/context_check.md)
+- Task type: "Blueprint" / Output: `docs/blueprints/`
 
 ---
 
 ## Findings Tracker Update Protocol
 
-## At the START of work
-
-Check if this work relates to a tracked finding:
-
-1. If input contains `F{N}` (e.g., "F1", "F3"), search `docs/findings/*_FINDINGS_TRACKER.md` for that finding
-2. If input is topic-based, search active trackers for a matching finding title
-3. If a match is found:
-   a. Read the tracker and any linked artifacts (finding report, investigation, design analysis)
-   b. Use these as context for the current work
-
-## At the END of work
-
-After writing the output artifact(s):
-
-1. Update the tracker's overview table: set `Stage` to `Blueprint Ready`, set `Status` to `In Progress`
-2. Update the per-finding **Lifecycle** table — append row:
-   ```
-   | Blueprint Ready | {YYYY-MM-DD HH:MM} UTC | {session} | [Blueprint + Prompt]({blueprint_path} + {prompt_path}) |
-   ```
-3. Check the resolution task: `[x] **FN.2: Blueprint + implementation prompt**...`
-4. Add changelog entry:
-   ```
-   | {YYYY-MM-DD HH:MM} UTC | {session} | FN stage -> Blueprint Ready. Blueprint + Prompt: {blueprint_path} + {prompt_path} |
-   ```
-5. Update `Last Updated` timestamp at top of tracker
-6. Sync to GitHub Projects (NON-FATAL) — read `docs/reference/github_projects_sync_protocol.md`, follow Protocol B: Lifecycle Stage = Blueprint Ready (`cf9ba762`), Status = In Progress (`47fc9ee4`), Evidence = artifact path(s). If `**Project Item ID**:` is missing or `—`, skip sync with a note.
-
-## HANDOFF UPDATE
-
-After the standard handoff message to the user, add:
-
-```
-Tracker updated: {tracker_path} — FN stage -> Blueprint Ready
-
-After /plan completes, update the tracker:
-- Stage -> Planned
-- Lifecycle row: `| Planned | {timestamp} | {session} | [Plan]({plan_path}) |`
-- Check task: `[x] **FN.3**: Implementation plan...`
-- Changelog: `FN stage -> Planned. Plan: {plan_path}`
-- GitHub sync (NON-FATAL): Protocol B — Lifecycle Stage = Planned (`a66cfac9`), Status = In Progress (`47fc9ee4`)
-```
-
-If no matching finding exists, proceed normally — not all work originates from findings.
+See [tracker_update_checklist.md](../_shared/tracker_update_checklist.md)
+- Stage: "Blueprint Ready"
+- Task: FN.2 (Blueprint + implementation prompt)
+- GitHub field: `cf9ba762`
 
 ---
 
@@ -193,6 +125,7 @@ If no matching finding exists, proceed normally — not all work originates from
 When creating the blueprint, follow this process:
 
 1. **Read upstream artifacts**: Check `docs/design/` and `docs/research/` for existing analysis related to the feature
+1a. **Check for Design Brief**: Use Glob to check `docs/design-briefs/*.md`. If found, Read the most recent one. Reference its design tokens, typography, color system, and component patterns when specifying frontend implementation details in the blueprint. If no Design Brief exists, proceed without it.
 2. **Extract requirements**: Identify what must be built from the design/research outputs (NOT diagnosing a bug — this is greenfield/proactive work)
 3. **Define scope**: Clearly separate what's in-scope vs. out-of-scope
 4. **Identify affected files**: List all files that will need changes
@@ -324,7 +257,6 @@ When writing prompts for `/plan` mode, use this structure:
 4. Call `ExitPlanMode` to present the plan for user approval
 5. **Wait for user approval** before proceeding to implementation
 6. After plan approval, invoke `/wrought-implement` to start the autonomous implementation loop with test verification.
-```
 
 ---
 
