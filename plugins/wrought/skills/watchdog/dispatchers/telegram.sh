@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034  # CATEGORY/SEVERITY are part of the dispatcher contract (positional args $1/$3); not all dispatchers use all parameters — telegram.sh only consumes MESSAGE.
 # telegram.sh — Telegram Bot API push dispatcher
 # Backward-compat anchor: reproduces byte-exact curl payload from pre-Stage-1
 # send_telegram() (deployed template lines 51-59) so existing users see no

@@ -1,0 +1,59 @@
+name: validate
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Print Claude Code version
+        run: claude --version
+
+      - name: Run claude plugin validate
+        run: claude plugin validate .
+
+      - name: JSON syntax floor (jq empty on each tracked *.json)
+        run: |
+          set -e
+          fail=0
+          for f in $(git ls-files '*.json'); do
+            if ! jq empty "$f" > /dev/null 2>&1; then
+              echo "::error file=$f::JSON syntax error"
+              fail=1
+            fi
+          done
+          [ $fail -eq 0 ]
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck on tracked *.sh
+        run: |
+          set -e
+          fail=0
+          for f in $(git ls-files '*.sh'); do
+            if ! shellcheck "$f"; then
+              fail=1
+            fi
+          done
+          [ $fail -eq 0 ]
