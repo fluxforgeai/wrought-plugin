@@ -7,8 +7,9 @@
   "plugins": [
     {
       "name": "wrought",
-      "source": ".",
-      "description": "Structured engineering methodology with cross-session findings tracking, dual-track pipelines, and multi-agent code review"
+      "source": "./plugins/wrought",
+      "description": "Structured engineering methodology with cross-session findings tracking, dual-track pipelines, and multi-agent code review",
+      "version": "1.1.2"
     }
   ]
 }

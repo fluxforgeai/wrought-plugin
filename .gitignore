@@ -1,0 +1,9 @@
+# Wrought session files (local, not committed)
+SESSION_SUMMARY_*.md
+NEXT_SESSION_PROMPT_*.md
+
+# Local Wrought workspace (self-host runtime — not part of distributed plugin)
+.claude/
+.wrought
+CLAUDE.md
+docs/
