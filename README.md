@@ -9,81 +9,86 @@ Install inside a Claude Code session:
 ```
 /plugin marketplace add fluxforgeai/wrought-plugin
 /plugin install wrought@wrought-plugin
+/reload-plugins
 ```
 
-The first command registers this repo as a Claude Code plugin marketplace; the second installs the `wrought` plugin from it. Restart your session if Claude Code prompts you to.
+The first command registers this repo as a Claude Code plugin marketplace; the second installs the `wrought` plugin from it; the third activates the skills, agents, and slash commands. Restart your Claude Code session if it prompts you to.
+
+### Slash command namespacing
+
+Claude Code namespaces plugin-provided slash commands under the plugin name. After installing, all Wrought commands are invoked as **`/wrought:<name>`** — for example, `/wrought:finding`, not `/finding`. Plain unprefixed forms will return `Unknown command`.
 
 **Step 1**: Start tracking work
 
 ```
-/finding "describe the problem, feature, or debt item"
+/wrought:finding "describe the problem, feature, or debt item"
 ```
 
 **Step 2**: Follow the pipeline
 
-- **Proactive** (new features, improvements): `/research` -> `/design` -> [`/ux-design`] -> `/blueprint` -> `/wrought-implement` -> `/forge-review`
-- **Reactive** (bugs, incidents): `/incident` -> `/investigate` -> `/rca-bugfix` -> `/wrought-rca-fix` -> `/forge-review`
+- **Proactive** (new features, improvements): `/wrought:research` -> `/wrought:design` -> [`/wrought:ux-design`] -> `/wrought:blueprint` -> `/wrought:wrought-implement` -> `/wrought:forge-review`
+- **Reactive** (bugs, incidents): `/wrought:incident` -> `/wrought:investigate` -> `/wrought:rca-bugfix` -> `/wrought:wrought-rca-fix` -> `/wrought:forge-review`
 
 **Step 3**: Review
 
 ```
-/forge-review --scope=diff
+/wrought:forge-review --scope=diff
 ```
 
 ## Skills
 
 ### Tier 1: Start Here
 
-| Skill | Description |
-|-------|-------------|
-| `/genesis` | Greenfield/brownfield project onboarding wizard. Produces PRD + ARCHITECTURE.md |
-| `/finding` | Create a Findings Tracker for cross-session memory and audit trail |
-| `/incident` | Structured incident capture with timeline and impact assessment |
+| Slash command | Description |
+|---------------|-------------|
+| `/wrought:genesis` | Greenfield/brownfield project onboarding wizard. Produces PRD + ARCHITECTURE.md |
+| `/wrought:finding` | Create a Findings Tracker for cross-session memory and audit trail |
+| `/wrought:incident` | Structured incident capture with timeline and impact assessment |
 
 ### Tier 2: Core Pipeline
 
-| Skill | Description |
-|-------|-------------|
-| `/research` | Deep research with external sources and documentation review |
-| `/design` | Interactive design analysis with tradeoff evaluation and recommendations |
-| `/ux-design` | Generate a Design Brief — application-type-aware design system, typography, colour, motion, anti-patterns. Used between `/design` and `/blueprint` for frontend work. |
-| `/blueprint` | Transform design into implementation spec and prompt for /plan |
-| `/investigate` | Root cause investigation with hypothesis testing and evidence gathering |
-| `/rca-bugfix` | Root cause analysis document and fix design with implementation prompt |
-| `/forge-review` | Multi-agent code review (complexity, data structures, paradigm, efficiency, flow-integrity) |
+| Slash command | Description |
+|---------------|-------------|
+| `/wrought:research` | Deep research with external sources and documentation review |
+| `/wrought:design` | Interactive design analysis with tradeoff evaluation and recommendations |
+| `/wrought:ux-design` | Generate a Design Brief — application-type-aware design system, typography, colour, motion, anti-patterns. Used between `/wrought:design` and `/wrought:blueprint` for frontend work. |
+| `/wrought:blueprint` | Transform design into implementation spec and prompt for `/plan` |
+| `/wrought:investigate` | Root cause investigation with hypothesis testing and evidence gathering |
+| `/wrought:rca-bugfix` | Root cause analysis document and fix design with implementation prompt |
+| `/wrought:forge-review` | Multi-agent code review (complexity, data structures, paradigm, efficiency, flow-integrity) |
 
 ### Tier 3: Advanced
 
-| Skill | Description |
-|-------|-------------|
-| `/analyze` | Codebase architecture analysis and system mapping |
-| `/safeguard` | Environment profiling and deployment risk detection |
-| `/watchdog` | Continuous monitoring and drift detection |
+| Slash command | Description |
+|---------------|-------------|
+| `/wrought:analyze` | Codebase architecture analysis and system mapping |
+| `/wrought:safeguard` | Environment profiling and deployment risk detection |
+| `/wrought:watchdog` | Continuous monitoring and drift detection |
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `/wrought-implement` | Start autonomous implementation loop with test verification |
-| `/wrought-rca-fix` | Start autonomous bugfix loop with test verification |
-| `/cancel-wrought-loop` | Cancel the active implementation/RCA loop |
-| `/session-start` | Start new session with context loading and greeting |
-| `/session-end` | End session with handoff documentation and tracker updates |
+| Slash command | Description |
+|---------------|-------------|
+| `/wrought:wrought-implement` | Start autonomous implementation loop with test verification |
+| `/wrought:wrought-rca-fix` | Start autonomous bugfix loop with test verification |
+| `/wrought:cancel-wrought-loop` | Cancel the active implementation/RCA loop |
+| `/wrought:session-start` | Start new session with context loading and greeting |
+| `/wrought:session-end` | End session with handoff documentation and tracker updates |
 
 ## Pipeline Overview
 
 ### Proactive Track (Features, Improvements, Tech Debt)
 
 ```
-/finding -> /research -> /design -> [/ux-design] -> /blueprint -> /plan -> /wrought-implement -> /forge-review
+/wrought:finding -> /wrought:research -> /wrought:design -> [/wrought:ux-design] -> /wrought:blueprint -> /plan -> /wrought:wrought-implement -> /wrought:forge-review
 ```
 
-Each step produces artifacts consumed by the next. The pipeline enforces quality gates -- you cannot skip steps without explicit override.
+Each step produces artifacts consumed by the next. The pipeline enforces quality gates -- you cannot skip steps without explicit override. (Note: `/plan` is Claude Code's built-in plan-mode command, not a Wrought-provided slash command, so it has no `/wrought:` prefix.)
 
 ### Reactive Track (Bugs, Incidents, Outages)
 
 ```
-/incident -> /investigate -> /rca-bugfix -> /plan -> /wrought-rca-fix -> /forge-review
+/wrought:incident -> /wrought:investigate -> /wrought:rca-bugfix -> /plan -> /wrought:wrought-rca-fix -> /wrought:forge-review
 ```
 
 Starts with structured incident capture, proceeds through investigation and root cause analysis, then implements the fix with automated verification.
