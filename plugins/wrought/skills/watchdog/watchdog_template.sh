@@ -39,6 +39,7 @@ SYSTEM_COUNT=0
 FIX_COUNT=0
 CHECK_COUNT=0
 START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+START_EPOCH=$(date +%s)
 
 # ========================================
 # CONFIGURATION SOURCING (Stage 1 — pluggable dispatchers)
@@ -150,8 +151,7 @@ fi
 
 is_duplicate() {
     local error_sig="$1"
-    local hash
-    hash=$(echo "$error_sig" | md5 2>/dev/null || echo "$error_sig" | md5sum | cut -d' ' -f1)
+    local hash=$(echo "$error_sig" | md5 2>/dev/null || echo "$error_sig" | md5sum | cut -d' ' -f1)
     if grep -q "$hash" "$REPORTED_FILE" 2>/dev/null; then
         return 0  # Is duplicate
     else
@@ -175,12 +175,11 @@ create_incident() {
     local error_type="$2"
     local summary="$3"
     local stack_trace="$4"
-    local timestamp incident_file escaped_trace
-    timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-    incident_file="$INCIDENT_DIR/${category}_$(date -u '+%Y%m%d_%H%M%S').json"
+    local timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+    local incident_file="$INCIDENT_DIR/${category}_$(date -u '+%Y%m%d_%H%M%S').json"
 
     # Escape stack trace for JSON
-    escaped_trace=$(echo "$stack_trace" | json_escape_stdin)
+    local escaped_trace=$(echo "$stack_trace" | json_escape_stdin)
 
     cat > "$incident_file" << INCIDENTEOF
 {
@@ -231,8 +230,8 @@ Run in Claude: <code>/incident $summary</code>" "medium"
 
 # Write status file for Claude to read
 write_status() {
-    local timestamp
-    timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+    local timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+    local uptime_seconds=$(($(date +%s) - START_EPOCH))
 
     cat > "$STATUS_FILE" << STATUSEOF
 {
@@ -261,16 +260,14 @@ STATUSEOF
 # Save PID
 echo $$ > "$PID_FILE"
 
-{
-    echo "========================================"
-    echo "Watchdog Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-    echo "Mode: Passive monitoring with incident tagging"
-    echo "De-duplication: Enabled"
-    echo "Interval: ${INTERVAL}s"
-    echo "Fix patterns: $FIX_PATTERNS"
-    echo "Fix context: $FIX_DESCRIPTION"
-    echo "========================================"
-} >> "$LOG_FILE"
+echo "========================================" >> "$LOG_FILE"
+echo "Watchdog Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$LOG_FILE"
+echo "Mode: Passive monitoring with incident tagging" >> "$LOG_FILE"
+echo "De-duplication: Enabled" >> "$LOG_FILE"
+echo "Interval: ${INTERVAL}s" >> "$LOG_FILE"
+echo "Fix patterns: $FIX_PATTERNS" >> "$LOG_FILE"
+echo "Fix context: $FIX_DESCRIPTION" >> "$LOG_FILE"
+echo "========================================" >> "$LOG_FILE"
 
 # Write initial status
 write_status

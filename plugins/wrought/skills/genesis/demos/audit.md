@@ -8,7 +8,7 @@
 
 ## Project Description
 
-A legacy user management API inherited from a previous team. The API works but has accumulated significant technical debt and security vulnerabilities. Your job is to audit it, prioritize the issues, and fix the most critical ones using the Wrought audit pipeline.
+A legacy user management API inherited from a previous team. The API works but has accumulated significant technical debt and security vulnerabilities. Your job is to audit it, prioritize the issues, and fix the most critical ones using the Wrought™ audit pipeline.
 
 ## Scaffold Files
 

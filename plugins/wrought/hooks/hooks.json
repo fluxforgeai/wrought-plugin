@@ -30,6 +30,7 @@
     ],
     "PreCompact": [
       {
+        "matcher": "auto",
         "hooks": [
           {
             "type": "command",

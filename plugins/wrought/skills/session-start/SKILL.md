@@ -83,7 +83,7 @@ continue to the next.
 ### Environment Profiling
 
 IF `.wrought` exists AND no file matching `docs/analysis/*_environment_profile.md`:
-  1. Announce: "This is a new Wrought project. Let me profile your environment."
+  1. Announce: "This is a new Wrought™ project. Let me profile your environment."
   2. Auto-invoke `/safeguard detect` (full interactive flow with checkpoints)
   3. After completion, continue to next check
 

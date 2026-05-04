@@ -57,7 +57,7 @@ wrought:
 
 **Trigger**: `/genesis [--brownfield] <project description>`
 
-**Purpose**: Guide structured project bootstrapping through 3 phases — Discovery Interview, Business Analysis, and Systems Analysis. Produces concrete artifacts that downstream Wrought skills consume: a discovery document, PRD, and architecture document.
+**Purpose**: Guide structured project bootstrapping through 3 phases — Discovery Interview, Business Analysis, and Systems Analysis. Produces concrete artifacts that downstream Wrought™ skills consume: a discovery document, PRD, and architecture document.
 
 **Modes**:
 - **Greenfield** (default): Interactive 5-question discovery interview

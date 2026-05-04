@@ -1,6 +1,6 @@
 ---
 name: cancel-wrought-loop
-description: "Cancel the active Wrought implementation/RCA loop"
+description: "Cancel the active Wrought™ implementation/RCA loop"
 disable-model-invocation: false
 wrought:
   version: "1.0"

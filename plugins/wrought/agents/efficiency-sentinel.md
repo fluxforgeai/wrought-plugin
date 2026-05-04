@@ -38,7 +38,7 @@ For each file in the review scope, check for these anti-pattern categories:
 - JSON encode/decode in inner loops
 - Repeated `pickle.dumps`/`pickle.loads` of the same object
 - YAML/TOML parsing inside loops when config doesn't change
-- `str()` → `int()` → `str()` conversion chains
+- `str()` -> `int()` -> `str()` conversion chains
 
 **Fix direction**: Parse once, pass the parsed object; cache serialized forms
 
@@ -90,9 +90,9 @@ For each file in the review scope, check for these anti-pattern categories:
 | **Cold path** (one-time, startup) | Configuration loading, CLI argument parsing, migrations | Only flag if egregiously wasteful |
 
 Use these signals to determine path temperature:
-- Request handlers, middleware, decorators → Hot
-- Functions called from `__main__` or CLI entry points → Cold
-- Functions in `cron/`, `batch/`, `tasks/` directories → Warm
+- Request handlers, middleware, decorators -> Hot
+- Functions called from `__main__` or CLI entry points -> Cold
+- Functions in `cron/`, `batch/`, `tasks/` directories -> Warm
 - When uncertain, check call sites with Grep
 
 ## Severity Rules
@@ -125,8 +125,8 @@ If you find no issues at all, return: `No efficiency findings.`
 ## After Analysis — Update Memory
 
 After completing your analysis, update your MEMORY.md with:
-- Known slow paths (file:function → why it's slow, acceptable or not)
-- Acceptable tradeoffs (file:function → "N+1 is fine here because N is always <5")
+- Known slow paths (file:function -> why it's slow, acceptable or not)
+- Acceptable tradeoffs (file:function -> "N+1 is fine here because N is always <5")
 - Project-specific patterns (e.g., "all file I/O is synchronous by design — no async in this project")
 - Remove stale entries for deleted/refactored code
 
