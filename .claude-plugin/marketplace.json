@@ -16,8 +16,14 @@
         "name": "FluxForge AI",
         "email": "johan@fluxforge.ai"
       },
-      "source": "./plugins/wrought",
-      "category": "productivity"
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/fluxforgeai/wrought-plugin.git",
+        "path": "plugins/wrought",
+        "ref": "main"
+      },
+      "category": "productivity",
+      "homepage": "https://fluxforge.ai"
     }
   ]
 }
