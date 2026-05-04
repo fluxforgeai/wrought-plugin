@@ -1,11 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "wrought-plugin",
+  "version": "1.0.0",
+  "description": "Wrought™ plugin marketplace — structured engineering methodology for Claude Code",
   "owner": {
     "name": "FluxForge AI",
     "email": "johan@fluxforge.ai"
   },
-  "description": "Wrought™ plugin marketplace — structured engineering methodology for Claude Code",
   "plugins": [
     {
       "name": "wrought",
