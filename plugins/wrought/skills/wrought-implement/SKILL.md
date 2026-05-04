@@ -48,7 +48,7 @@ wrought:
       - forge-review
 ---
 
-# Wrought Implement — Autonomous Implementation Loop
+# Wrought™ Implement — Autonomous Implementation Loop
 
 You are starting a Ralph Wiggum inner loop for implementation. A Stop hook will automatically verify your work after each attempt to stop.
 

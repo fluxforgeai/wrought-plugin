@@ -48,7 +48,7 @@ wrought:
       - forge-review
 ---
 
-# Wrought RCA Fix — Autonomous Bugfix Loop
+# Wrought™ RCA Fix — Autonomous Bugfix Loop
 
 You are starting a Ralph Wiggum inner loop for an RCA bugfix. A Stop hook will automatically verify your fix after each attempt to stop.
 

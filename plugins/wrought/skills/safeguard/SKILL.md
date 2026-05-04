@@ -84,7 +84,7 @@ for a relevant tracker and note it for context, but do not enforce stage require
 
 1. **Evidence-based**: Classification is driven by file scanning + user confirmation, not assumptions. Every indicator is verified against the codebase with ambiguities resolved via interactive checkpoints.
 
-2. **Non-blocking**: The safeguard profile is optional. All Wrought skills work without it. When a profile exists, downstream skills can optionally read it for enrichment — but never require it.
+2. **Non-blocking**: The safeguard profile is optional. All Wrought™ skills work without it. When a profile exists, downstream skills can optionally read it for enrichment — but never require it.
 
 3. **Cumulative taxonomy**: Profiles are cumulative — Profile Zero is a subset of A, A is a subset of B, B is a subset of C. A project classified as Profile B meets all Profile A requirements plus its own.
 

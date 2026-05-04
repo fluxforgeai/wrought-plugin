@@ -163,7 +163,7 @@ The test `test_process_all_completes_all_jobs` fails intermittently. The complet
 
 ## What's Next
 
-Open `DEMO_WALKTHROUGH.md` for a guided tour of fixing this bug with Wrought.
+Open `DEMO_WALKTHROUGH.md` for a guided tour of fixing this bug with Wrought™.
 ```
 
 ## Walkthrough

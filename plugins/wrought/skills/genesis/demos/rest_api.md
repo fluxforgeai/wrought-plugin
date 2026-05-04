@@ -56,7 +56,7 @@ def start():
 ```markdown
 # Task Management API
 
-A REST API for managing tasks. Built with Wrought.
+A REST API for managing tasks. Built with Wrought™.
 
 ## Quick Start
 
