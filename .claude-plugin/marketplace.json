@@ -10,9 +10,14 @@
   "plugins": [
     {
       "name": "wrought",
-      "source": "./plugins/wrought",
       "description": "Structured engineering methodology with cross-session findings tracking, dual-track pipelines, and multi-agent code review",
-      "version": "1.1.3"
+      "version": "1.1.3",
+      "author": {
+        "name": "FluxForge AI",
+        "email": "johan@fluxforge.ai"
+      },
+      "source": "./plugins/wrought",
+      "category": "productivity"
     }
   ]
 }
