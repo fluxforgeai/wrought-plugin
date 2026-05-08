@@ -65,7 +65,7 @@ wrought:
 - **Demo** (`--demo`): Scaffold a guided demo project showcasing a Wrought pipeline
 
 **Examples**:
-- `/genesis Kuda Data Connector — REST API for banking data aggregation`
+- `/genesis Acme Banking API — REST API for account data aggregation`
 - `/genesis --brownfield existing-saas-app`
 - `/genesis --demo`
 
@@ -79,7 +79,7 @@ wrought:
 - If argument contains `--brownfield`, set mode to `brownfield`; otherwise `greenfield`
 - Extract project description (everything after `--brownfield` if present, or the full argument)
 - Derive project slug: lowercase, replace spaces/hyphens with underscores, strip special characters
-  - Example: "Kuda Data Connector" -> `kuda_data_connector`
+  - Example: "Acme Banking API" -> `acme_banking_api`
 
 **Step 2**: Check for existing state file.
 
