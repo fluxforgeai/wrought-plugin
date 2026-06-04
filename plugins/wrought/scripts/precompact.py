@@ -13,7 +13,10 @@ _TERMINAL_STATUSES = frozenset({"Verified", "Resolved", "Out of Scope"})
 
 def main():
     data = json.load(sys.stdin)
-    cwd = data.get("cwd", ".")
+    # `cwd` here is the resolved project root, not Claude Code's process cwd.
+    # Prefer CLAUDE_PROJECT_DIR (cwd-resilient across subdirs/worktrees);
+    # fall back to JSON-payload cwd for backward compat.
+    cwd = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd", ".")
     trigger = data.get("trigger", "unknown")
     session_id = data.get("session_id", "unknown")
 

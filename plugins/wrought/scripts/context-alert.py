@@ -33,8 +33,10 @@ def main():
     if hook_event == "Stop" and data.get("stop_hook_active", False):
         return
 
-    cwd = data.get("cwd", ".")
-    bridge_path = os.path.join(cwd, ".claude", "bridge", "context-bridge.json")
+    # Prefer CLAUDE_PROJECT_DIR (cwd-resilient across subdirs/worktrees);
+    # fall back to JSON-payload cwd for backward compat.
+    project_root = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd", ".")
+    bridge_path = os.path.join(project_root, ".claude", "bridge", "context-bridge.json")
 
     if not os.path.exists(bridge_path):
         return

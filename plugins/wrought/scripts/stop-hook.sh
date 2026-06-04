@@ -16,11 +16,16 @@ INPUT=$(cat)
 # Parse stop_hook_active from input (jq with python3 fallback)
 if command -v jq &>/dev/null; then
     STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false')
-    CWD=$(echo "$INPUT" | jq -r '.cwd // "."')
+    JSON_CWD=$(echo "$INPUT" | jq -r '.cwd // "."')
 else
     STOP_HOOK_ACTIVE=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(str(d.get('stop_hook_active', False)).lower())")
-    CWD=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('cwd', '.'))")
+    JSON_CWD=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('cwd', '.'))")
 fi
+
+# CWD here is the resolved project root, not Claude Code's process cwd.
+# Prefer CLAUDE_PROJECT_DIR (cwd-resilient across subdirs/worktrees);
+# fall back to JSON-payload cwd for backward compat.
+CWD="${CLAUDE_PROJECT_DIR:-$JSON_CWD}"
 
 # If Claude is already continuing from a Stop hook block, don't re-block.
 if [ "$STOP_HOOK_ACTIVE" = "true" ]; then

@@ -25,6 +25,7 @@ commands/wrought-implement.md
 commands/wrought-rca-fix.md
 hooks/hooks.json
 scripts/context-alert.py
+scripts/enforce-pipeline.sh
 scripts/precompact.py
 scripts/stop-hook.sh
 skills/_shared/context_check.md
