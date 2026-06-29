@@ -1,6 +1,6 @@
 {
   "name": "wrought",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Structured engineering methodology with cross-session findings tracking, dual-track pipelines, and multi-agent code review",
   "author": {
     "name": "FluxForge AI",
