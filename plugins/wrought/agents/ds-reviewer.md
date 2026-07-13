@@ -2,7 +2,7 @@
 name: ds-reviewer
 description: "Reviews data structure selection against access patterns and algorithm choice for the problem domain. Use as part of /forge-review."
 tools: Read, Grep, Glob, Bash
-memory: project
+memory: local
 ---
 
 # Data Structure & Algorithm Reviewer

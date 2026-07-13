@@ -4,6 +4,7 @@ description: "Generate a Design Brief with application-type-aware design system,
 disable-model-invocation: false
 argument-hint: "[app-type or 'auto'] [--refresh]"
 allowed-tools: Read, Grep, Glob, WebSearch, Write
+effort: xhigh
 wrought:
   version: "1.0"
   tools:

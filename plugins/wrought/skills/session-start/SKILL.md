@@ -214,6 +214,26 @@ This step is non-fatal — if `docs/findings/` does not exist, skip silently.
 
 ---
 
+## Step 3.9: Active Constraints Review
+
+Surface in-force cross-session constraints so decisions don't evaporate post-compaction:
+
+1. **Use Read** to open `CLAUDE.md` and locate the `## Active Constraints (in force)` section
+2. If the section is **absent**, skip silently (plugin-only installs / not-yet-seeded projects) — do NOT emit any greeting line
+3. If present, read the `### Durable invariants` and `### Time-bounded / ephemeral` subsections **directly** — do NOT depend on the `wrought` CLI being installed
+4. For each `EXPIRES <YYYY-MM-DD>` entry, compare the date to today; flag any with a past date as **LAPSED (prune or re-stamp)**. `CLEARS-WHEN` and `SUPERSEDED-ONLY` entries are always active (manual review)
+5. Include in the **Current Status** section of the greeting (omit entirely if there are no constraints):
+   ```
+   **Active Constraints**:
+   - [CST-001] {one-line text} — clears: {predicate}
+   - [CST-003] {one-line text} — LAPSED (expired {date}) — prune or re-stamp
+   ```
+6. If the `wrought` CLI is available, you may optionally suggest: "Run `wrought constraints check` for active/lapsed counts" (date computation only — never required)
+
+This step is non-fatal — if `CLAUDE.md` has no `## Active Constraints (in force)` section, skip silently.
+
+---
+
 ## Step 4: Provide Greeting
 
 Format your response as:
@@ -238,6 +258,8 @@ I've read the session handoff and I'm oriented with the {project_name} project.
 
 What would you like to work on today?
 ```
+
+**Model tip (`opusplan`)**: `opusplan` covers only the `/plan` checkpoint gate (Opus reasons in plan mode, then execution runs on Sonnet) — it does **not** apply to `/design`, `/blueprint`, `/investigate`, `/research`, or any other pipeline stage, all of which run outside plan mode. To get Opus-level reasoning on those stages, use `/model opus` manually or delegate the sub-step to an Agent-tool spawn with an explicit `model` override. This is a policy with **partial automation** — residual manual `/model` control remains at the main loop.
 
 ## Step 5: Confirm Context
 

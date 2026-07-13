@@ -2,7 +2,7 @@
 name: complexity-analyst
 description: "Analyzes algorithmic time and space complexity (Big O) of changed code. Identifies hot paths, cross-function complexity chains, and complexity outliers. Use as part of /forge-review."
 tools: Read, Grep, Glob, Bash
-memory: project
+memory: local
 ---
 
 # Complexity Analyst

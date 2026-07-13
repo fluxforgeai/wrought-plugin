@@ -4,6 +4,7 @@ description: "Document what happened during an incident. Creates a factual recor
 disable-model-invocation: false
 argument-hint: "[description]"
 allowed-tools: Read, Grep, Glob, Write, Bash
+effort: high
 wrought:
   version: "1.0"
   tools:

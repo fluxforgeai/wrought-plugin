@@ -4,6 +4,7 @@ description: "Deep multi-agent code review with algorithmic complexity analysis,
 disable-model-invocation: false
 argument-hint: "[--scope=diff|full] [file or directory]"
 allowed-tools: Read, Grep, Glob, Bash, Agent, Write
+effort: xhigh
 wrought:
   version: "1.0"
   tools:
@@ -209,6 +210,7 @@ The reference implementation of this heuristic is `src/wrought/core/flow_trigger
 
 For each subagent, use:
 - `subagent_type: "general-purpose"`
+- `model`: the per-spawn model assigned to that specialist (see the launch list below) — Precheck-1-confirmed to take effect independent of `subagent_type`
 - Include in the prompt: the file list, the scope description, and instruction to return structured findings
 
 The prompt for each subagent should follow this template:
@@ -235,12 +237,14 @@ Your system prompt is defined in `.claude/agents/{agent_filename}.md` — read i
 Return ONLY your structured findings. Do not include explanatory prose.
 ```
 
-Launch agents in parallel (4 always, plus Agent 5 if `SPAWN_FLOW_INTEGRATOR` is true):
-- **Agent 1**: Complexity Analyst → `.claude/agents/complexity-analyst.md`
-- **Agent 2**: DS&A Reviewer → `.claude/agents/ds-reviewer.md`
-- **Agent 3**: Paradigm Enforcer → `.claude/agents/paradigm-enforcer.md`
-- **Agent 4**: Efficiency Sentinel → `.claude/agents/efficiency-sentinel.md`
-- **Agent 5** (conditional on `SPAWN_FLOW_INTEGRATOR`): Flow Integrator → `.claude/agents/flow-integrator.md`
+Launch agents in parallel (4 always, plus Agent 5 if `SPAWN_FLOW_INTEGRATOR` is true). Each specialist is pinned to an explicit per-spawn `model` so the fan-out partially decorrelates (see the same-lab caveat below):
+- **Agent 1**: Complexity Analyst → `.claude/agents/complexity-analyst.md` — `model: opus`
+- **Agent 2**: DS&A Reviewer → `.claude/agents/ds-reviewer.md` — `model: sonnet` (deliberately differs from Complexity Analyst)
+- **Agent 3**: Paradigm Enforcer → `.claude/agents/paradigm-enforcer.md` — `model: sonnet`
+- **Agent 4**: Efficiency Sentinel → `.claude/agents/efficiency-sentinel.md` — `model: opus`
+- **Agent 5** (conditional on `SPAWN_FLOW_INTEGRATOR`): Flow Integrator → `.claude/agents/flow-integrator.md` — `model: opus`
+
+**Note (same-lab partial decorrelation):** pinning complexity-analyst / efficiency-sentinel / flow-integrator to Opus and ds-reviewer / paradigm-enforcer to Sonnet gives same-lab (Claude-tier) **partial** decorrelation — it catches some shared blind spots between differently-sized models from the same lab, but it is **not** a cross-lab hedge. A true cross-lab hedge requires manually pasting the diff into a different vendor's model (see `/design` Layer-3) — a distinct, human-driven mechanism this fan-out does not provide. This pin set is near-free / cost-neutral-to-lower when the main loop already runs Opus (today's common default), but is a real cost increase for the Opus-pinned specialists if the main loop runs on a cheaper model. (Fable stays holstered per CST-004 — never auto-pin/auto-select it as a specialist model.)
 
 ---
 
@@ -372,6 +376,14 @@ If any **Suggestion** findings exist:
 
 **CRITICAL PIPELINE RULE**: Suggest ONLY `/finding` and/or `/simplify` as next steps. Do NOT offer to implement fixes. Do NOT offer to skip pipeline steps.
 
+### Promote durable Rejected dispositions (Active Constraints)
+
+When a Suggestion is intentionally **Rejected** with a *durable* rationale ("don't do X / don't re-propose Y because Z") — in addition to recording "Resolved: Rejected — {rationale}" in the tracker (rule 9) — promote it to the `## Active Constraints (in force)` section in `CLAUDE.md` (append under `### Durable invariants`):
+```
+- **[CST-NNN]** <don't-do-X> — clears: `SUPERSEDED-ONLY` · owner: S{session} · why: <rejection rationale> · ref: <review report>
+```
+so the rejected guidance is required-read and isn't re-surfaced in a future review. Text-persistence, not compliance (see CONVENTIONS.md). Skip transient/style rejections.
+
 ---
 
 ## Step 9: Display Summary
@@ -403,7 +415,7 @@ Clean review — no issues found.
 
 This skill and its subagents are **read-only** with respect to the user's source code:
 
-- **Subagents**: Have `tools: Read, Grep, Glob, Bash` — no Write/Edit. Memory writes are auto-granted for `.claude/agent-memory/` only.
+- **Subagents**: Have `tools: Read, Grep, Glob, Bash` — no Write/Edit. Memory writes go to each agent's declared scope — the review agents use `local` (`.claude/agent-memory-local/<name>/`); `decorrelation-critic` has no memory.
 - **Orchestrator**: Uses Write ONLY to create the review report in `docs/reviews/`. Never modifies source code, configuration files, or any file outside `docs/reviews/`.
 
 If you find yourself about to modify a source file — **STOP**. That is not your job. Report the finding in the review.

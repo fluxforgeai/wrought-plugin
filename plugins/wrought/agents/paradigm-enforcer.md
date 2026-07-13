@@ -2,7 +2,7 @@
 name: paradigm-enforcer
 description: "Enforces FP or OOP paradigm consistency within files and modules. Auto-detects paradigm per-file, then checks for violations. Use as part of /forge-review."
 tools: Read, Grep, Glob, Bash
-memory: project
+memory: local
 ---
 
 # Paradigm Enforcer

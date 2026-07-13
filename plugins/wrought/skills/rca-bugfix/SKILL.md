@@ -3,6 +3,7 @@ name: rca-bugfix
 description: "Root cause analysis and bug fix procedure. Investigates bugs, documents the RCA, and creates an implementation prompt for the fix. Use after /investigate or /finding."
 disable-model-invocation: false
 argument-hint: "[finding-ref or description]"
+effort: xhigh
 wrought:
   version: "1.0"
   tools:

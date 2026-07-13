@@ -4,6 +4,7 @@ description: "Strategic system analysis for health assessment, pattern recogniti
 disable-model-invocation: false
 argument-hint: "[mode] [target]"
 allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write
+effort: xhigh
 wrought:
   version: "1.0"
   tools:

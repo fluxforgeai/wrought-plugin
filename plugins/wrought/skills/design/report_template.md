@@ -45,6 +45,16 @@ All modes generate reports with this structure:
 
 ---
 
+## Adversarial Omission Sweep (if fired)
+_Rendered only when the CP1 irreversible+public tag fired PHASE 5.5. Independent, tiered objections from the same-lab `model: opus` decorrelation critics (missing-option / strongest-counter-case / irreversibility-stress / completeness) — objections to confront, never a verdict. Same-lab critics do NOT decorrelate shared blind spots; that residual is the Layer-0 human spine (CST-005) + the Layer-3 cross-lab hedge._
+
+| Tier | Lens | Omission | Why it matters | Grounding |
+|------|------|----------|----------------|-----------|
+
+**Layer 3 (cross-lab) ran / waived**: {ran — omissions surfaced | waived — rationale}
+
+---
+
 ## Recommendation
 {With rationale and key trade-off}
 

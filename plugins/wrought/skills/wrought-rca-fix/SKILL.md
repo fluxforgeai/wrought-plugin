@@ -97,6 +97,12 @@ Write `.claude/wrought-loop-state.json`:
 4. If the verifier fails, you will be blocked — analyze the error output and iterate on the fix
 5. Continue until the verifier passes (bug is resolved)
 
+## Redline Escalation (max iterations exhausted on the same failing signature)
+
+If the loop hits `max_iterations` still failing the **same** test signature:
+1. **First rule out a mis-specified oracle** — a wrong or oversharp assertion, a flaky or environment-coupled test, or an AC the verifier cannot actually observe. A bad oracle is the common cause; fix the test, don't force the fix.
+2. **Only then**, the operator may take ONE **supervised** `/model fable` pass on the capsule tail to generate a fresh candidate root-cause hypothesis or fix approach, then return with `/model opus` to evaluate and apply it. Fable **generates a candidate, never grades**; watch for empty/refused output (a refusal is a non-answer, not a clean pass). This is a manual, opt-in, owner/ZDR-free escalation — **no committed `model:` pin** anywhere (see CST-004).
+
 ## Step 6: Completion
 
 When the loop completes (verifier passes):

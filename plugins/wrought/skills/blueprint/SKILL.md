@@ -4,6 +4,7 @@ description: "Transform a design into an implementation spec. Creates a blueprin
 disable-model-invocation: false
 argument-hint: "[design-ref or topic]"
 allowed-tools: Read, Grep, Glob, Write
+effort: xhigh
 wrought:
   version: "1.0"
   tools:
