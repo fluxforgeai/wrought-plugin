@@ -5,6 +5,7 @@ context: fork
 agent: general-purpose
 disable-model-invocation: false
 argument-hint: "[finding-ref or description]"
+effort: xhigh
 wrought:
   version: "1.0"
   tools:
@@ -56,6 +57,8 @@ wrought:
 ---
 
 # Deep Investigation Skill
+
+> **Routing note (Pass-A):** This skill runs as a forked `general-purpose` agent (`context: fork`). Forking sub-steps spawn with an explicit `model`+`effort` per the Pass-A default (floor `high`, default `xhigh` for coding/agentic sub-steps); `max` is reserved for Pass-B-gated escalations (e.g. loop-stall, irreversible-tag) — it is **not** the default for every spawn. See `docs/reference/dynamic_stage_routing_policy.md`.
 
 **Trigger**: Use `/investigate {incident or finding report}` when you need a thorough investigation of an incident, bug, unexpected behavior, or proactive finding.
 
@@ -110,6 +113,8 @@ ELSE:
 4. **Review past RCAs and Investigations** in `docs/RCAs/` and `docs/investigations/` to avoid repeating errors and recognize patterns
 5. **Write detailed Investigation Report** to `docs/investigations/{YYYY-MM-DD_HHMM}_{issue_name}.md`
 6. **THEN STOP** and await further instructions
+
+**Optional — supervised Fable hypothesis-generator (baffling exhausted root cause only):** if the root cause stays open after a thorough Full Investigation, the operator may **manually** spawn ONE Claude Fable 5 hypothesis-generator via the Agent tool — it **generates candidate hypotheses only, never a verdict**. Test each candidate on the Opus session model; watch for refused/empty output (a refusal is a non-answer, not a clean bill); the **human reads the RCA** before `/rca-bugfix`. Manual, opt-in, owner/ZDR-free only — **no committed `model:` pin** (see CST-004).
 
 ### Confirmation Mode (findings)
 

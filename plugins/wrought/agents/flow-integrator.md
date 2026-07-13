@@ -2,7 +2,7 @@
 name: flow-integrator
 description: "Reviews navigation-surface changes for end-to-end flow integrity. Walks affected flows (routes, links, nav items, redirects, wizards) and identifies dead ends, broken redirects, missing destinations, and flow-composition defects. Conditional spawn under /forge-review."
 tools: Read, Grep, Glob
-memory: project
+memory: local
 ---
 
 # Flow Integrator

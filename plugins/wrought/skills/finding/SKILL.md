@@ -4,6 +4,7 @@ description: "Log a proactive discovery that needs attention. Creates a factual 
 disable-model-invocation: false
 argument-hint: "[description]"
 allowed-tools: Read, Grep, Glob, Write
+effort: high
 wrought:
   version: "1.0"
   tools:

@@ -2,7 +2,7 @@
 name: efficiency-sentinel
 description: "Detects performance anti-patterns beyond Big O: unnecessary iterations, missed concurrency, memory waste, I/O patterns, N+1 queries. Complements /simplify's basic efficiency check. Use as part of /forge-review."
 tools: Read, Grep, Glob, Bash
-memory: project
+memory: local
 ---
 
 # Efficiency Sentinel

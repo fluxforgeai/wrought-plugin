@@ -30,6 +30,7 @@ After writing the output artifact(s):
    ```
    | {STAGE_NAME} | {YYYY-MM-DD HH:MM} UTC | {session} | [{ARTIFACT_TYPE}]({ARTIFACT_PATH_PATTERN}) |
    ```
+2b. **Routing Ledger** (optional; F1 #176 Phase 2/3) — if this stage's model/effort/orchestration diverged from the Pass-A recommendation, record it. Generate a paste-ready row with `wrought route {stage} --ledger-row --session {session}`, then **correct the Realized cell** to what you actually used and fill the Divergence reason. Append it under a `### Routing Ledger` section in the tracker. `wrought route` recommends only — the Realized tuple is what actually ran (it may be a supervised manual `fable` escalation, which the recommendation never emits).
 3. Check the resolution task: `[x] **{TASK_DESCRIPTION}**...`
 4. Add changelog entry:
    ```

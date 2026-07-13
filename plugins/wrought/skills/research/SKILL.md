@@ -6,6 +6,7 @@ agent: general-purpose
 disable-model-invocation: false
 argument-hint: "[topic or question]"
 allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write
+effort: xhigh
 wrought:
   version: "1.0"
   tools:
@@ -64,6 +65,8 @@ wrought:
 ---
 
 # Research Skill
+
+> **Routing note (Pass-A):** This skill runs as a forked `general-purpose` agent (`context: fork`). Forking sub-steps spawn with an explicit `model`+`effort` per the Pass-A default (floor `high`, default `xhigh` for coding/agentic sub-steps); `max` is reserved for Pass-B-gated escalations (e.g. loop-stall, irreversible-tag) — it is **not** the default for every spawn. See `docs/reference/dynamic_stage_routing_policy.md`.
 
 **Trigger**: Use `/research {question or topic}` when you need to research a technical topic, error, or concept and create a documented record.
 

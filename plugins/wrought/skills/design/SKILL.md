@@ -3,7 +3,8 @@ name: design
 description: "Interactive design analysis for architecture decisions. Combines codebase analysis, documentation review, and external research to provide evidence-based recommendations. Use for tradeoff analysis, pattern evaluation, migration planning, or design validation."
 disable-model-invocation: false
 argument-hint: "[mode] [topic]"
-allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write
+allowed-tools: Read, Grep, Glob, WebFetch, WebSearch, Write, Agent
+effort: xhigh
 wrought:
   version: "1.0"
   tools:
@@ -14,9 +15,10 @@ wrought:
       - web_fetch
       - web_search
       - write_file
+      - delegate
   platforms:
     claude-code:
-      allowed-tools: "Read, Grep, Glob, WebFetch, WebSearch, Write"
+      allowed-tools: "Read, Grep, Glob, WebFetch, WebSearch, Write, Agent"
       disable-model-invocation: false
   agent:
     role: "Design Analyst"
@@ -134,6 +136,7 @@ The most common mode — comparing approaches for a design decision.
 
 1. **CP1 — Understand Goal**: "What's the design goal for: {topic}?"
    → Improve reliability | Improve performance | Reduce complexity | Add new capability | Let me describe...
+   - **Irreversibility gate (human-confirmed)**: "Is this decision **irreversible AND public**?" (SemVer-permanent surface / relicensing / trademark class / public launch copy) — default **yes** when unsure. If **yes**, set the **irreversible+public tag**: PHASE 5.5 (Adversarial Omission Sweep) fires, and the Layer-0 human spine (CST-005) + the Layer-3 cross-lab hedge at CP8 become mandatory-on-fire. The human owns this call — a model self-assessing the trigger shares the blind spot it hedges.
 
 2. **CP2 — Constraints** [multi]: "What constraints should I consider?"
    → Must maintain backward compat | Cannot change external APIs | Limited time/resources | Must work with existing infra | No constraints | Let me specify...
@@ -189,14 +192,31 @@ The most common mode — comparing approaches for a design decision.
 **PHASE 5: Scoring & Comparison** (Automatic)
 - Score each option against user's priorities, calculate weighted totals, generate trade-off matrix
 
+**PHASE 5.5: Adversarial Omission Sweep** (fires only on the CP1 irreversible+public tag; silent-skip otherwise)
+- Only when CP1's irreversibility gate is **yes**. On the ~99% of reversible designs this **silently skips** — no spawn, no output, no report section.
+- Spawn the `decorrelation-critic` agent (`model: opus`) **once per lens** — missing-option, strongest-counter-case, irreversibility-stress, completeness — in a single message (mirror the `forge-review` parallel-spawn pattern), each reading `.claude/agents/decorrelation-critic.md` with the option matrix + the draft CP8 recommendation and its one assigned lens.
+- Collect the critics' **independent tiered objections** (MUST-ADDRESS / SHOULD-CONSIDER / NOTE) and surface them into CP8 as objections to confront — **never a consensus vote, never approve/reject, never a score**.
+- **Honest caveat (state in-line):** this catches *skipped* omissions only; a same-lab Opus panel does **NOT decorrelate shared blind spots** — that residual is owned by the Layer-0 human spine (CST-005) and the Layer-3 cross-lab hedge (below).
+
 8. **CP8 — Review Recommendation**: "Based on your priorities, I recommend: {Option}
    Summary: ✓ {Primary benefit} ✓ {Secondary benefit} ✗ {Main trade-off}
    Key trade-off: {what you gain} vs {what you lose}
    Do you want to proceed with this recommendation?"
    → Yes, create the design document | I prefer a different option | Need more analysis on specific aspect | Just save the analysis
+   **On the irreversible+public tag, CP8 also runs the decorrelation ladder's outer layers:**
+   - **Layer 2 (optional, owner/ZDR-free only):** one *supervised* main-loop `/model fable` pass over the option matrix — generate-only, never a grader (see CST-004); return with `/model opus`. Honest caveat: it **narrows but does not close** the gap to Layer 3 (still same-lab-adjacent, not cross-lab). Skip under ZDR and for any non-owner run.
+   - **Layer 3 (cross-lab hedge — MANDATORY-on-fire for relicensing / trademark / SemVer-permanent triggers):** paste `{the full option matrix + the CP8 recommendation}` into a **different lab's** model (GPT-5.5 / Gemini 3.1 Pro) and ask **only**: "what consideration category did we miss?" — an omission-hunt, **not** a re-score or a vote. This is the only rung that decorrelates shared blind spots.
+   - CP8 **records ran-or-waived**: whether Layer 3 ran (and its omissions) or was explicitly waived (and why). The human owner (Layer 0 / CST-005) — not any LLM layer — makes the go/no-go call.
 
 **PHASE 6: Generate Report** (Automatic)
 Write to: `docs/design/{YYYY-MM-DD_HHMM}_{topic_slug}.md`
+
+**PHASE 6.5: Promote durable constraints (Automatic)**
+If the design **rejected** an approach for a durable reason ("don't re-propose X because Y"), promote it to the `## Active Constraints (in force)` section in `CLAUDE.md` so a future session does not re-litigate it. Create the section if absent (a `wrought init`/`upgrade` project already has it); append under `### Durable invariants`:
+```
+- **[CST-NNN]** <don't-do-X> — clears: `SUPERSEDED-ONLY` · owner: S{session} · why: <reason> · ref: <this design doc>
+```
+This is text-persistence, not compliance (see CONVENTIONS.md). Skip if the design surfaced no durable negative constraint.
 
 9. **CP9 — Next Steps**: "Design analysis complete: {filename}. What would you like to do next?"
    → Create implementation plan (EnterPlanMode) | Start implementing now | Share with team first | Save for later
